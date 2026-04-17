@@ -1,6 +1,7 @@
 {
   "id": "2026-04-20-v2",
   "content": "测试📢 v2.1 发布：新增播放快捷键 Alt+P，学习更高效！",
+  "_link_备注": "link值为空则暂时关闭下载，恢复时把下面link填回正确地址，例子：“https://cdn.jsdelivr.net/gh/ladygagazhou/Vo-config@main/VOCAB_LAB.html”",
   "link": "https://cdn.jsdelivr.net/gh/ladygagazhou/Vo-config@main/VOCAB_LAB.html",
   "linkText": "📥 点击下载新版本",
   "enabled": true
