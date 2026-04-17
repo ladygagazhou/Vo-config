@@ -1,0 +1,4514 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VOCAB LAB · 单词记忆宫殿</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+
+    /* 💡 信息栏中的计划标签样式 */
+#planIndicator .plan-tag {
+    color: var(--accent);
+    background: var(--accent-glow);
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid rgba(74, 108, 247, 0.15);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 10px; /* 与后面的“共 X 词”拉开间距 */
+}
+
+/* 确保信息栏垂直居中对齐 */
+.stats-area {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+    /* 专门修改音标下拉框宽度 */
+#phoneticSelect {
+    width: 90px;
+}
+
+/* 专门修改释义下拉框宽度 */
+#meaningSelect {
+    width: 90px;
+}
+    :root, [data-theme="light"] {
+      --bg: #f5f5f0;
+      --surface: #ffffff;
+      --surface-hover: #fafaf7;
+      --border: #e2e0d8;
+      --text: #1a1a1a;
+      --text-dim: #7a7a72;
+      --accent: #4a6cf7;
+      --accent-glow: rgba(74,108,247,0.10);
+      --accent-hover: #3b5de8;
+      --green: #2d9d6a;
+      --radius: 10px;
+      --m1: #c97b1a; --m2: #3a72d6; --m3: #2a9d6a; --m4: #8b6cc0; --m5: #999;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06);
+      --modal-bg: rgba(0,0,0,0.3);
+    }
+    [data-theme="dark"] {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface-hover: #222633;
+      --border: #2a2e3d;
+      --text: #e4e6ef;
+      --text-dim: #8b8fa3;
+      --accent: #6c9cfc;
+      --accent-glow: rgba(108,156,252,0.15);
+      --accent-hover: #8bb4ff;
+      --green: #5cd89c;
+      --m1: #f0a95b; --m2: #8bb4ff; --m3: #7dd3a8; --m4: #b09adb; --m5: #6b7080;
+      --shadow: 0 1px 4px rgba(0,0,0,0.3);
+      --modal-bg: rgba(0,0,0,0.6);
+    }
+
+    /* ================= 卡片大小 (1-5级) ================= */
+    [data-size="1"] { --card-min-w: 200px; --card-h: 80px; }
+    [data-size="2"] { --card-min-w: 260px; --card-h: 100px; }
+    [data-size="3"] { --card-min-w: 320px; --card-h: 120px; }
+    [data-size="4"] { --card-min-w: 380px; --card-h: 140px; }
+    [data-size="5"] { --card-min-w: 440px; --card-h: 160px; }
+
+    /* ================= 卡片间距 (1-5级) ================= */
+    [data-gap="1"] { --card-gap: 6px; }
+    [data-gap="2"] { --card-gap: 12px; }
+    [data-gap="3"] { --card-gap: 18px; }
+    [data-gap="4"] { --card-gap: 24px; }
+    [data-gap="5"] { --card-gap: 32px; }
+
+    /* ================= 字号大小 (1-10级) ================= */
+    [data-font="1"] { --word-fs: 14px; --mean-fs: 9px; }
+    [data-font="2"] { --word-fs: 16px; --mean-fs: 10px; }
+    [data-font="3"] { --word-fs: 18px; --mean-fs: 11px; }
+    [data-font="4"] { --word-fs: 20px; --mean-fs: 12px; }
+    [data-font="5"] { --word-fs: 22px; --mean-fs: 13px; }
+    [data-font="6"] { --word-fs: 24px; --mean-fs: 14px; }
+    [data-font="7"] { --word-fs: 26px; --mean-fs: 15px; }
+    [data-font="8"] { --word-fs: 28px; --mean-fs: 16px; }
+    [data-font="9"] { --word-fs: 30px; --mean-fs: 17px; }
+    [data-font="10"]{ --word-fs: 32px; --mean-fs: 18px; }
+
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;}
+
+    /* Header */
+    .app-header{padding:20px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--border);background:var(--surface);}
+    .app-title-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-left: 10px; }
+    .app-title{font-family:'Crimson Pro',serif;font-size:26px;font-weight:600;color:var(--accent);}
+    .author-btn { font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--accent); background: var(--accent-glow); border: 1px solid transparent; border-radius: 6px; padding: 4px 10px; cursor: pointer; transition: all .2s; font-weight: 500; letter-spacing: 0.5px; }
+    .author-btn:hover { background: var(--accent); color: #fff; transform: translateY(-1px); box-shadow: 0 2px 8px var(--accent-glow); }
+    .header-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+
+     /* ================= 首页按钮字号修改 ================= */
+    .btn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:7px 14px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+    .btn:hover{border-color:var(--accent);background:var(--surface-hover);}
+    .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;}
+    .btn-primary:hover{background:var(--accent-hover);}
+
+    /* ================= 侧边栏按钮字号修改 ================= */
+    .btn-sm{padding:5px 10px;font-size:12px;}
+
+    .mode-btn-review { background: #8b6cc0 !important; color: white !important; border-color: #8b6cc0 !important; }
+    .mode-btn-review:hover { background: #7a5eb0 !important; }
+     /* ================= 下拉菜单字号修改 ================= */
+    .speed-select,.size-select{font-family:'DM Sans',sans-serif;font-size:12px;padding:5px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-dim);cursor:pointer;outline:none;}
+    .voice-select { max-width: 120px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+
+    /* Theme toggle */
+    .theme-toggle{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;}
+    .theme-toggle:hover{border-color:var(--accent);}
+
+    /* ================= 合并后的信息栏 (图例 + 统计) ================= */
+    .info-bar { padding: 12px 32px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--text-dim); border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; margin-left: 10px; }
+    .legend-area { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .stats-area { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .legend-title { font-weight: 600; color: var(--text); }
+    .legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; }
+    .legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .stat-num { color: var(--accent); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .active-bank { background: var(--accent-glow); color: var(--accent); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+
+    /* Modal General */
+    .modal-overlay{display:none;position:fixed;inset:0;background:var(--modal-bg);z-index:3000;align-items:center;justify-content:center;padding:20px;}
+    .modal-overlay.show{display:flex;}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;max-width:680px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.2);}
+    .modal-header{padding:20px 24px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .modal-header h2{font-size:17px;font-weight:600;}
+    .modal-close{width:30px;height:30px;border:none;background:none;color:var(--text-dim);cursor:pointer;font-size:18px;border-radius:6px;display:flex;align-items:center;justify-content:center;}
+    .modal-close:hover{background:var(--surface-hover);color:var(--text);}
+    .modal-body{padding:16px 24px 24px;overflow-y:auto;flex:1;}
+
+    /* Tabs in modal */
+    .modal-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;}
+    .modal-tab{padding:10px 18px;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-dim);transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;}
+    .modal-tab:hover{color:var(--text);}
+    .modal-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+    /* Bank sections */
+    .bank-section{margin-bottom:20px;}
+    .bank-section h3{font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text);display:flex;align-items:center;gap:8px;}
+    .bank-section h3 .emoji{font-size:16px;}
+    .bank-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;}
+    .bank-card{padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:all .2s;position:relative;}
+    .bank-card:hover{border-color:var(--accent);box-shadow:var(--shadow);}
+    .bank-card.selected{border-color:var(--accent);background:var(--accent-glow);}
+    .bank-card .bc-name{font-size:13px;font-weight:600;margin-bottom:3px;}
+    .bank-card .bc-count{font-size:11px;color:var(--text-dim);}
+    .bank-card .bc-check{position:absolute;top:8px;right:10px;color:var(--accent);font-size:14px;display:none;}
+    .bank-card.selected .bc-check{display:block;}
+
+    /* Import panel */
+    .import-section{margin-top:8px;}
+    .import-section textarea{width:100%;height:120px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:12px;resize:vertical;outline:none;transition:border-color .2s;}
+    .import-section textarea:focus{border-color:var(--accent);}
+    .import-section textarea::placeholder{color:var(--text-dim);opacity:0.5;}
+    .import-section p{font-size:11px;color:var(--text-dim);margin-bottom:8px;line-height:1.6;}
+    .import-section code{background:var(--bg);padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:10px;}
+    .import-actions{margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    .file-label{font-size:12px;color:var(--text-dim);cursor:pointer;padding:7px 14px;border:1px dashed var(--border);border-radius:7px;transition:all .2s;}
+    .file-label:hover{border-color:var(--accent);color:var(--accent);}
+
+    /* Word Grid */
+    .word-grid{padding:16px 32px;display:grid;gap:var(--card-gap);transition:gap .2s; margin-left: 10px;}
+    .word-card{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);transition:all .2s;animation:fadeIn .3s ease backwards; height: var(--card-h); overflow: hidden;}
+    .word-card:hover{border-color:var(--accent);background:var(--surface-hover);box-shadow:var(--shadow);}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+    .word-index{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);opacity:0.4;min-width:22px;text-align:right;margin-top:4px;}
+
+    /* 词汇主内容区域 */
+    .word-main{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;}
+    .word-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;flex-shrink:0;}
+    .word-text{font-family:'Crimson Pro',serif;font-size:var(--word-fs);font-weight:600;color:var(--text);transition:font-size .2s;}
+    .word-phonetic{font-family:'JetBrains Mono',monospace;font-size:var(--mean-fs);color:var(--text-dim);transition:all .2s;}
+
+    /* 释义区域 */
+    .word-meanings{margin-top:4px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;flex:1;padding-right:4px;transition:all .2s;}
+    .word-meanings::-webkit-scrollbar{width:3px;}
+    .word-meanings::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+    .word-meaning-line{font-size:var(--mean-fs);line-height:1.5;display:flex;align-items:baseline;gap:5px;transition:font-size .2s;}
+
+    .meaning-rank{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+    .meaning-text{flex:1;min-width:0;}
+
+    /* ================= 常规显示/隐藏逻辑 (学习模式下生效) ================= */
+    body[data-phonetic="hover"] .word-phonetic { opacity: 0; filter: blur(4px); pointer-events: none; }
+    body[data-phonetic="hover"] .word-card:hover .word-phonetic { opacity: 1; filter: blur(0); }
+    body[data-phonetic="hide"] .word-phonetic { display: none !important; }
+
+    body[data-meaning="hover"] .word-meanings { opacity: 0; filter: blur(4px); pointer-events: none; }
+    body[data-meaning="hover"] .word-card:hover .word-meanings { opacity: 1; filter: blur(0); pointer-events: auto; }
+    body[data-meaning="hide"] .word-meanings { display: none !important; }
+
+    /* ================= 🧠 复习模式 强制覆盖样式 ================= */
+    body[data-study-mode="review"] .word-phonetic {
+      display: block !important;
+      opacity: 0 !important; filter: blur(4px) !important; pointer-events: none !important;
+    }
+    body[data-study-mode="review"] .word-meanings {
+      display: flex !important;
+      opacity: 0 !important; filter: blur(4px) !important; pointer-events: none !important;
+    }
+    body[data-study-mode="review"] .word-card:hover .word-phonetic,
+    body[data-study-mode="review"] .word-card:hover .word-meanings {
+      opacity: 1 !important; filter: blur(0) !important; pointer-events: auto !important;
+    }
+
+    /* ================= 侧边栏样式 (Sidebar) ================= */
+    .sidebar-wrapper {
+      position: fixed; top: 0; bottom: 0; left: 0; width: 30px; z-index: 2000;
+    }
+    .sidebar-wrapper::before {
+      content: ''; position: absolute; top: 50%; left: 0; transform: translateY(-50%);
+      width: 4px; height: 50px; background: var(--border); border-radius: 0 4px 4px 0;
+      transition: all 0.2s; opacity: 0.6;
+    }
+    .sidebar-wrapper:hover::before { background: var(--accent); opacity: 1; height: 70px; }
+    .sidebar-wrapper:hover { width: 320px; }
+    .sidebar-wrapper:hover .sidebar { transform: translateX(0); box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+
+    .sidebar {
+      position: absolute; top: 0; left: 0; bottom: 0; width: 320px;
+      background: var(--surface); border-right: 1px solid var(--border);
+      transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex; flex-direction: column;
+    }
+    /* 侧边栏 Tab 样式 */
+    .sidebar-tab { flex: 1; padding: 15px 0; font-size: 14px; font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--text-dim); transition: all .2s; border-bottom: 2px solid transparent; font-family: inherit;}
+    .sidebar-tab:hover { color: var(--text); background: var(--surface-hover); }
+    .sidebar-tab.active { color: var(--accent); border-bottom-color: var(--accent); color: var(--text); }
+
+    .sidebar-content { overflow-y: auto; padding-bottom: 20px; }
+    .sidebar-content::-webkit-scrollbar { width: 4px; }
+    .sidebar-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .sb-item { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
+    .sb-item:hover { background: var(--surface-hover); }
+    .sb-info { flex: 1; min-width: 0; cursor: pointer; }
+    .sb-word { font-family: 'Crimson Pro', serif; font-weight: 600; font-size: 19px; color: var(--text); }
+    .sb-mean { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
+    .sb-del { background: none; border: none; color: var(--text-dim); font-size: 14px; cursor: pointer; padding: 4px 6px; border-radius: 4px; transition: all 0.2s; margin-left: 10px; }
+    .sb-del:hover { color: #e74c3c; background: rgba(231,76,60,0.1); }
+
+    /* ================= 右键菜单样式 ================= */
+    .context-menu {
+      position: fixed; background: var(--surface); border: 1px solid var(--border);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-radius: 8px; padding: 6px;
+      z-index: 4000; min-width: 140px; display: none; flex-direction: column; gap: 2px;
+    }
+    .context-menu-item {
+      padding: 10px 14px; font-size: 13px; color: var(--text); cursor: pointer;
+      border-radius: 6px; transition: background 0.2s; display: flex; align-items: center; gap: 8px;
+    }
+    .context-menu-item:hover { background: var(--surface-hover); }
+    .cm-danger { color: #e74c3c; }
+    .cm-danger:hover { background: rgba(231,76,60,0.1); }
+
+    /* 编辑输入框通用样式 */
+    .edit-input {
+      width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border);
+      background:var(--bg); color:var(--text); font-family:inherit; font-size:14px;
+      outline:none; transition:border-color 0.2s;
+    }
+    .edit-input:focus { border-color: var(--accent); }
+
+    /* ================= 翻卡测验弹窗样式 ================= */
+    .test-modal { max-width: 420px; padding: 0; }
+    .test-body { padding: 40px 30px; text-align: center; display: flex; flex-direction: column; min-height: 280px; justify-content: center; }
+    .test-word-display { font-family: 'Crimson Pro', serif; font-size: 42px; font-weight: 600; color: var(--text); margin-bottom: 16px; line-height: 1.2; }
+
+    .test-hint-area { margin: 0 auto 30px; position: relative; display: inline-block; cursor: help; padding: 10px 16px; border-radius: 8px; background: var(--surface-hover); border: 1px dashed var(--border); min-width: 200px;}
+    .test-hint-text { font-size: 14px; color: var(--text); opacity: 0; filter: blur(5px); transition: all 0.3s ease; }
+    .test-hint-mask { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text-dim); transition: opacity 0.3s; pointer-events: none;}
+    .test-hint-area:hover .test-hint-text { opacity: 1; filter: blur(0); }
+    .test-hint-area:hover .test-hint-mask { opacity: 0; }
+
+    .test-btns { display: flex; gap: 16px; justify-content: center; }
+    .test-btn { flex: 1; padding: 14px 0; font-size: 15px; font-weight: 600; border-radius: 10px; border: none; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+    .test-btn-yes { background: var(--green); color: #fff; box-shadow: 0 4px 12px rgba(45,157,106,0.2); }
+    .test-btn-yes:hover { background: #238558; transform: translateY(-2px); }
+    .test-btn-no { background: #e74c3c; color: #fff; box-shadow: 0 4px 12px rgba(231,76,60,0.2); }
+    .test-btn-no:hover { background: #c0392b; transform: translateY(-2px); }
+
+    .test-summary { font-size: 16px; color: var(--text); line-height: 1.6; margin-bottom: 24px; }
+    .test-summary b { color: var(--accent); font-size: 18px; }
+
+    /* ================= 深度解释悬停气泡 (Popover) 特有样式 ================= */
+    .explain-popover {
+      position: fixed;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      border-radius: 12px;
+      width: 420px;
+      max-width: calc(100vw - 40px);
+      max-height: min(700px, 90vh); /* 自定义高度 */
+      display: flex;
+      flex-direction: column;
+      z-index: 5000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform: scale(0.95);
+      pointer-events: none;
+    }
+    .explain-popover.show {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+    .explain-popover-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .explain-popover-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* 解释内容排版 */
+    .explain-content { line-height: 1.6; font-size: 14px; color: var(--text); padding-bottom: 10px; }
+    .explain-content strong { color: var(--accent); }
+    .explain-content ul { margin: 8px 0 8px 20px; padding: 0; }
+    .explain-content li { margin-bottom: 6px; }
+
+    .ex-list { display: flex; flex-direction: column; gap: 12px; }
+    .ex-item { background: var(--surface-hover); border: 1px solid var(--border); border-radius: 10px; display: flex; gap: 14px; align-items: flex-start; text-align: left;}
+    .ex-text-area { flex: 1; }
+    .ex-en { font-family: 'Crimson Pro', serif; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
+    .ex-zh { font-size: 12.5px; color: var(--text-dim); }
+    .ex-play-btn { background: var(--accent-glow); border: 1px solid transparent; color: var(--accent); cursor: pointer; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;}
+    .ex-play-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .ex-play-btn svg { width: 14px; height: 14px; }
+
+    /* ================= 操作按钮样式 ================= */
+    .card-actions { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; margin-top: 1px; }
+    .speak-btn { width:32px; height:32px; border-radius:50%; border:1px solid var(--border); background:transparent; color:var(--text-dim); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+    .speak-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-glow); }
+    .speak-btn.playing { border-color:var(--green); color:var(--green); animation:pulse 1s infinite; }
+    @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(45,157,106,0.3);}50%{box-shadow:0 0 0 5px rgba(45,157,106,0);}}
+    .speak-btn svg { width:14px; height:14px; }
+
+    .hover-action-btn { opacity: 0; pointer-events: none; }
+    .word-card:hover .hover-action-btn { opacity: 1; pointer-events: auto; }
+    .stubborn-btn.active { color: var(--m1); border-color: var(--border); }
+    .stubborn-btn.active svg { fill: var(--m1); }
+    .stubborn-btn.active:hover { border-color: var(--m1); background: rgba(201, 123, 26, 0.1); }
+
+    /* Pagination & Jump */
+    .pagination{padding:20px 32px 32px;display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap; margin-left: 10px;}
+    .page-btn{font-family:'JetBrains Mono',monospace;font-size:12px;min-width:34px;height:34px;padding:0 8px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text-dim);cursor:pointer;transition:all .2s;}
+    .page-btn:hover{border-color:var(--accent);color:var(--text);}
+    .page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;}
+    .page-btn:disabled{opacity:.3;cursor:not-allowed;}
+
+    .page-input-wrapper { display: flex; align-items: center; gap: 6px; margin-left: 12px; font-size: 12px; color: var(--text-dim); }
+    .page-input { width: 44px; height: 34px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--text); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; outline: none; transition: border-color .2s; }
+    .page-input:focus { border-color: var(--accent); }
+    .page-input::-webkit-outer-spin-button, .page-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .page-input[type=number] { -moz-appearance: textfield; }
+
+    .empty-state{text-align:center;padding:70px 32px;color:var(--text-dim);}
+    .empty-state .icon{font-size:44px;margin-bottom:14px;opacity:.4;}
+    .empty-state h3{font-size:17px;color:var(--text);margin-bottom:8px;}
+    .empty-state p{font-size:12px;line-height:1.6;max-width:400px;margin:0 auto;}
+
+    .loading-ph{color:var(--text-dim);font-style:italic;font-size:10px;}
+
+    @media(max-width:640px){
+      .app-header,.toolbar,.info-bar,.word-grid,.pagination{padding-left:24px;padding-right:14px;}
+      .word-grid{grid-template-columns:1fr !important;}
+      .app-title-group{margin-bottom: 10px;}
+      .modal{margin:10px;max-height:90vh;}
+      .bank-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}
+      .page-input-wrapper { width: 100%; justify-content: center; margin-left: 0; margin-top: 10px; }
+      .sidebar-wrapper { width: 20px; }
+    }
+    /* ================= 学习热力图样式 ================= */
+    .heatmap-container { padding: 16px 20px; background: var(--surface-hover); border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+    .heatmap-header { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .heatmap-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(4, 1fr); gap: 4px; }
+    .heatmap-cell { aspect-ratio: 1/1; background: var(--border); border-radius: 2px; position: relative; transition: transform 0.2s; }
+    .heatmap-cell:hover { transform: scale(1.3); z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    .level-0 { opacity: 0.3; }
+    .level-1 { background: #9be9a8 !important; opacity: 1; }
+    .level-2 { background: #40c463 !important; opacity: 1; }
+    .level-3 { background: #30a14e !important; opacity: 1; }
+    .level-4 { background: #216e39 !important; opacity: 1; }
+    .heatmap-cell::after { content: attr(data-date); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .heatmap-cell:hover::after { opacity: 1; }
+
+    /* ================= 拼写测验专属样式 ================= */
+.spell-input {
+  width: 80%; max-width: 300px; padding: 12px; margin: 24px auto;
+  background: transparent; border: none; border-bottom: 2px solid var(--border);
+  color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 600;
+  text-align: center; outline: none; transition: all 0.3s;
+}
+.spell-input:focus { border-bottom-color: var(--accent); }
+.spell-input::placeholder { color: var(--text-dim); opacity: 0.3; font-weight: 400; }
+.spell-input.success { border-bottom-color: var(--green); color: var(--green); }
+.spell-input.error { border-bottom-color: #e74c3c; color: #e74c3c; animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+.spell-input.success { border-bottom-color: var(--green); color: var(--green); }
+.spell-input.error { border-bottom-color: #e74c3c; color: #e74c3c; animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+/* 💡 新增：看答案时的橙色高亮样式 */
+.spell-input.reveal { border-bottom-color: var(--m1); color: var(--m1); }
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-2px, 0, 0); }
+  20%, 80% { transform: translate3d(4px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+  40%, 60% { transform: translate3d(8px, 0, 0); }
+}
+
+.spell-hint-text {
+  font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--accent);
+  letter-spacing: 4px; min-height: 30px; margin-bottom: -10px; opacity: 0; transition: opacity 0.3s;
+}
+.spell-hint-text.show { opacity: 1; }
+kbd { background: var(--surface-hover); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 11px;}
+
+    /* ================= 页面练习模式专属样式 ================= */
+    .prac-menu-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 10px; }
+    .prac-menu-card { padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 16px; text-align: left; }
+    .prac-menu-card:hover { border-color: var(--accent); background: var(--surface-hover); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }
+    .prac-menu-icon { font-size: 28px; background: var(--bg); width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+    .prac-menu-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .prac-menu-desc { font-size: 12px; color: var(--text-dim); }
+    .prac-question-area { min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 24px; text-align: center; }
+    .prac-q-word { font-family: 'Crimson Pro', serif; font-size: 36px; font-weight: 600; color: var(--text); }
+    .prac-q-mean { font-size: 20px; color: var(--text); font-weight: 500; line-height: 1.4; }
+/* ================= 练习模式：精简四选一布局 ================= */
+.prac-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 默认两列 */
+  gap: 15px;
+  width: 100%;
+  margin-top: 10px;
+}
+/* 句子模式下强制单列展示，方便阅读长句 */
+.prac-options-grid.sentence-mode { grid-template-columns: 1fr; }
+
+.prac-opt-btn {
+  padding: 16px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-hover);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+}
+.prac-opt-btn:hover { border-color: var(--accent); background: var(--surface); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.prac-opt-btn.correct { background: var(--green) !important; color: #fff !important; border-color: var(--green) !important; }
+.prac-opt-btn.wrong { background: #e74c3c !important; color: #fff !important; border-color: #e74c3c !important; animation: shake 0.4s; }
+
+    .prac-opt-btn:disabled { pointer-events: none; }
+    .prac-audio-pulse { width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 0 0 rgba(108,156,252,0.4); animation: pulse-heavy 1.5s infinite; border: none; }
+    @keyframes pulse-heavy { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74,108,247, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(74,108,247, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74,108,247, 0); } }
+
+/* 💡 沉浸模式：隐藏所有干扰元素 */
+body[data-zen-mode="on"] .app-header,
+body[data-zen-mode="on"] .info-bar,
+body[data-zen-mode="on"] .pagination,
+body[data-zen-mode="on"] .sidebar-wrapper {
+  display: none !important;
+}
+
+/* 沉浸模式下增加网格的顶部间距，防止卡片贴边 */
+body[data-zen-mode="on"] .word-grid {
+  padding-top: 40px;
+}
+
+
+
+  </style>
+</head>
+<body data-theme="light" data-size="3" data-font="4" data-gap="2" data-phonetic="show" data-meaning="show" data-study-mode="learn">
+
+<!-- ========== 🔑 免费增值秘钥验证系统 ========== -->
+<style>
+
+
+
+  /* 数据管理弹窗中锁定的tab */
+  .modal-tab.premium-tab-locked {
+    position: relative;
+    color: var(--text-dim) !important;
+    pointer-events: none;
+  }
+  .modal-tab.premium-tab-locked::after {
+    content: ' 🔒';
+    font-size: 10px;
+  }
+
+  /* 高级版激活弹窗 */
+  #premiumModal {
+    position: fixed; inset: 0; z-index: 99999;
+    background: var(--modal-bg, rgba(0,0,0,0.3));
+    display: none; align-items: center; justify-content: center;
+  }
+  #premiumModal.show { display: flex; }
+  #premiumModal .pm-card {
+    background: var(--surface, #fff);
+    border: 1px solid var(--border, #e2e0d8);
+    border-radius: 16px;
+    padding: 40px 36px;
+    max-width: 420px; width: 90%;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+    animation: pmSlideIn 0.3s ease;
+  }
+  @keyframes pmSlideIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  #premiumModal input {
+    width: 100%; padding: 14px 16px;
+    border: 1.5px solid var(--border, #e2e0d8);
+    border-radius: 10px; font-size: 15px;
+    background: var(--bg, #f5f5f0);
+    color: var(--text, #1a1a1a);
+    outline: none; text-align: center;
+    letter-spacing: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    transition: border-color 0.2s;
+  }
+  #premiumModal input:focus { border-color: var(--accent, #4a6cf7); }
+
+  /* 账号相关弹窗 */
+  #bindPhoneModal.show,
+  #loginModal.show { display: flex !important; }
+  #bindPhoneModal input:focus,
+  #loginModal input:focus { border-color: var(--accent, #4a6cf7); }
+
+  /* 底部升级横幅 */
+  #upgradeBanner {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(135deg, var(--accent, #4a6cf7), #8b6cc0);
+    color: #fff;
+    padding: 10px 20px;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    font-size: 14px; font-weight: 500;
+    z-index: 9990;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: opacity 0.3s;
+  }
+  #upgradeBanner:hover { opacity: 0.92; }
+  #upgradeBanner .ub-close {
+    position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: rgba(255,255,255,0.7);
+    font-size: 18px; cursor: pointer; padding: 4px;
+  }
+  #upgradeBanner .ub-close:hover { color: #fff; }
+  body.premium-active #upgradeBanner { display: none !important; }
+
+/* 顶部版本标识徽章 */
+  .version-badge {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px; font-weight: 600;
+    padding: 4px 8px; border-radius: 6px;
+    cursor: pointer; transition: all 0.2s;
+    display: inline-flex; align-items: center;
+    border: 1px solid transparent; outline: none;
+  }
+  /* 免费版样式 */
+  .version-badge.free {
+    background: var(--surface-hover, #fafaf7);
+    color: var(--text-dim, #7a7a72);
+    border-color: var(--border, #e2e0d8);
+  }
+  .version-badge.free:hover {
+    color: var(--text); border-color: var(--text-dim);
+  }
+  /* 高级版样式 */
+  .version-badge.premium {
+    color: var(--green, #2d9d6a);
+    background: rgba(45,157,106,0.1);
+    border-color: rgba(45,157,106,0.2);
+  }
+
+</style>
+
+<!-- 升级横幅 -->
+<div id="upgradeBanner" onclick="showPremiumModal()">
+  👨‍💻 个人独立开发不易，赞助一杯咖啡支持作者，即可解锁全部高级功能（多计划管理 · 批量复习 · 练习模式 · 数据导出）✨
+  <button style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 16px;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px;margin-left:10px;">支持作者</button>
+  <button class="ub-close" onclick="closeUpgradeBanner(event)">&times;</button>
+</div>
+
+
+</div>
+
+<!-- 高级版激活弹窗 -->
+<!-- 绑定手机号的持续提醒按钮(仅付费且未绑定的用户看到) -->
+
+
+<style>
+  /* 溪流式脉动:3秒一个周期,柔和变化 */
+  @keyframes bindReminderStream {
+    0%, 100% {
+      box-shadow: 0 4px 16px rgba(74, 108, 247, 0.25);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 6px 24px rgba(139, 108, 192, 0.55);
+      transform: scale(1.04);
+    }
+  }
+  #bindReminderBtn:hover {
+    transform: scale(1.08) !important;
+    animation-play-state: paused;
+  }
+  #bindReminderBtn.show { display: inline-flex !important; align-items: center; gap: 4px; }
+
+
+</style>
+
+<div id="premiumModal">
+  <div class="pm-card">
+    <div style="font-size: 40px; margin-bottom: 12px;">✨</div>
+    <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 6px; color: var(--text);">升级到高级版</h2>
+    <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.6;">
+      解锁全部功能：计划管理 · 导入词库 · 数据管理<br>批量复习 · 专属定制选项
+    </p>
+    <input id="premiumKeyInput" type="text" placeholder="VL-XXXX-XXXX-XXXX-XXXX" autocomplete="off">
+    <button onclick="activatePremium()" style="
+      width: 100%; margin-top: 14px; padding: 13px;
+      background: linear-gradient(135deg, var(--accent, #4a6cf7), #8b6cc0);
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+    ">激活高级版</button>
+
+
+    <button onclick="window.open('https://www.kuaifaka.net/purchasing?link=zlZmU', '_blank')" style="
+      width: 100%; margin-top: 12px; padding: 12px;
+      background: transparent; color: var(--accent);
+      border: 1.5px solid var(--accent); border-radius: 10px;
+      font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    " onmouseover="this.style.background='var(--accent-glow)'" onmouseout="this.style.background='transparent'">
+      🛒 购买激活码
+    </button>
+
+    <button onclick="openLoginModal()" style="
+      width: 100%; margin-top: 10px; padding: 10px;
+      background: transparent; color: var(--text-dim);
+      border: 1px dashed var(--text-dim); border-radius: 10px;
+      font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+    " onmouseover="this.style.color='var(--accent)'; this.style.borderColor='var(--accent)'"
+       onmouseout="this.style.color='var(--text-dim)'; this.style.borderColor='var(--text-dim)'">
+      🔑 老用户账号登录
+    </button>
+
+    <p id="premiumMsg" style="font-size: 13px; margin-top: 12px; min-height: 18px; transition: opacity 0.3s; opacity: 0;"></p>
+    <button onclick="closePremiumModal()" style="
+      margin-top: 8px; background: none; border: none;
+      color: var(--text-dim); font-size: 13px; cursor: pointer;
+    ">暂不升级，继续使用免费版</button>
+  </div>
+</div>
+
+<!-- 绑定手机号弹窗 (激活成功后自动弹出) -->
+<div id="bindPhoneModal" style="
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6); z-index: 10000;
+  align-items: center; justify-content: center; padding: 20px;
+">
+  <div style="
+    background: var(--card-bg, #fff); border-radius: 16px;
+    padding: 28px 24px; max-width: 380px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center;
+  ">
+    <div style="font-size: 40px; margin-bottom: 12px;">📱</div>
+    <h2 style="font-size: 19px; font-weight: 700; margin-bottom: 6px; color: var(--text);">绑定手机号(可选)</h2>
+    <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 18px; line-height: 1.6;">
+      绑定后,换设备/换浏览器可以直接登录恢复<br>高级版,不用重新购买激活码
+    </p>
+    <input id="bindPhoneInput" type="tel" maxlength="11" placeholder="请输入手机号" autocomplete="off" style="
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--border, #e5e7eb);
+      border-radius: 10px; font-size: 15px;
+      text-align: center; letter-spacing: 2px;
+      background: var(--input-bg, #f9fafb); color: var(--text);
+      outline: none; transition: border-color 0.2s;
+      font-family: 'JetBrains Mono', monospace;
+    ">
+    <button onclick="submitBindPhone()" style="
+      width: 100%; margin-top: 14px; padding: 13px;
+      background: linear-gradient(135deg, var(--accent, #4a6cf7), #8b6cc0);
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+    ">确认绑定</button>
+    <p id="bindPhoneMsg" style="font-size: 13px; margin-top: 12px; min-height: 18px; opacity: 0; transition: opacity 0.3s;"></p>
+    <button onclick="closeBindPhoneModal()" style="
+      margin-top: 6px; background: none; border: none;
+      color: var(--text-dim); font-size: 13px; cursor: pointer;
+    ">跳过,以后再说</button>
+  </div>
+</div>
+
+<!-- 老用户账号登录弹窗 -->
+<div id="loginModal" style="
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6); z-index: 10000;
+  align-items: center; justify-content: center; padding: 20px;
+">
+  <div style="
+    background: var(--card-bg, #fff); border-radius: 16px;
+    padding: 28px 24px; max-width: 380px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center;
+  ">
+    <div style="font-size: 40px; margin-bottom: 12px;">🔑</div>
+    <h2 style="font-size: 19px; font-weight: 700; margin-bottom: 6px; color: var(--text);">账号登录</h2>
+    <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 18px; line-height: 1.6;">
+      输入绑定的手机号和激活码,恢复高级版<br>
+      <span style="color: #f59e0b;">⚠️ 登录后原设备将自动退出</span>
+    </p>
+    <input id="loginPhoneInput" type="tel" maxlength="11" placeholder="手机号" autocomplete="off" style="
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--border, #e5e7eb);
+      border-radius: 10px; font-size: 15px;
+      text-align: center; letter-spacing: 2px;
+      background: var(--input-bg, #f9fafb); color: var(--text);
+      outline: none; margin-bottom: 10px;
+      font-family: 'JetBrains Mono', monospace;
+    ">
+    <input id="loginKeyInput" type="text" placeholder="激活码 VL-XXXX-XXXX-XXXX-XXXX" autocomplete="off" style="
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--border, #e5e7eb);
+      border-radius: 10px; font-size: 14px;
+      text-align: center; letter-spacing: 1px;
+      background: var(--input-bg, #f9fafb); color: var(--text);
+      outline: none; text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+    ">
+    <button onclick="submitLogin()" style="
+      width: 100%; margin-top: 14px; padding: 13px;
+      background: linear-gradient(135deg, var(--accent, #4a6cf7), #8b6cc0);
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+    ">登录并恢复高级版</button>
+    <p id="loginMsg" style="font-size: 13px; margin-top: 12px; min-height: 18px; opacity: 0; transition: opacity 0.3s;"></p>
+    <button onclick="closeLoginModal()" style="
+      margin-top: 6px; background: none; border: none;
+      color: var(--text-dim); font-size: 13px; cursor: pointer;
+    ">← 返回</button>
+  </div>
+</div>
+
+<script>
+
+  // 💡 新增：获取试用状态
+function getTrialStatus() {
+  let startDate = localStorage.getItem(TRIAL_START_KEY);
+
+  // 如果是第一次打开，记录开始日期
+  if (!startDate) {
+    startDate = new Date().toISOString();
+    localStorage.setItem(TRIAL_START_KEY, startDate);
+  }
+
+  const start = new Date(startDate);
+  const now = new Date();
+  const diffTime = now - start;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // 计算过去的天数
+
+  const daysLeft = TRIAL_DAYS - diffDays;
+  return {
+    isActive: daysLeft > 0,
+    daysLeft: daysLeft > 0 ? daysLeft : 0
+  };
+}
+
+// ===== ⚠️ 配置区：填入你的 Supabase 信息 =====
+const SUPABASE_URL = 'https://jwzdzyknmubzqshblmea.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Qs1wWeCn1XfR5B9zfkQIUA_eWzGDFpM';
+// ===============================================
+
+const PREMIUM_STORAGE_KEY = 'vocab_lab_premium';
+
+// 💡 新增：试用期配置（天数）
+const TRIAL_DAYS = 7;
+const TRIAL_START_KEY = 'vocab_trial_start_date';
+
+// 设备指纹
+function getDeviceFingerprint() {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.textBaseline = 'top';
+  ctx.font = '14px Arial';
+  ctx.fillText('vocab-fp', 2, 2);
+  const cd = canvas.toDataURL();
+  const raw = [
+    navigator.userAgent, navigator.language,
+    screen.width + 'x' + screen.height, screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.hardwareConcurrency || '', cd.slice(-50)
+  ].join('|||');
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++) {
+    hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+    hash |= 0;
+  }
+  return 'DEV-' + Math.abs(hash).toString(36).toUpperCase();
+}
+
+const _deviceId = getDeviceFingerprint();
+
+function sbFetch(path, opts = {}) {
+  return fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    ...opts,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || 'return=representation',
+      ...(opts.headers || {})
+    }
+  });
+}
+
+// 调用 Supabase 函数（RPC）
+async function sbRpc(fnName, params) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fnName, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(params)
+  });
+  if (!res.ok) throw new Error('RPC failed: ' + res.status);
+  return res.json();
+}
+
+// ---- 高级版状态管理 ----
+let isPremium = false;
+let isTrialMode = false; // 💡 新增：专门记录是否处于试用模式
+
+// 修改后的 applyPremiumState 函数
+function applyPremiumState(unlocked, mode = 'none', daysLeft = 0) {
+  isPremium = unlocked;
+  isTrialMode = (mode === 'trial'); // 💡 关键：如果是试用模式，则标记为 true
+
+  const badge = document.getElementById('headerVersionBadge');
+  const banner = document.getElementById('upgradeBanner');
+
+  if (unlocked) {
+    document.body.classList.add('premium-active');
+
+    // UI 徽章逻辑（保持你之前的逻辑不变）
+    if (badge) {
+      if (mode === 'trial') {
+        badge.className = 'version-badge free';
+        badge.style.color = 'var(--orange)';
+        badge.innerHTML = `⏳ 正在使用高级版 (剩 ${daysLeft} 天)`;
+        badge.onclick = showPremiumModal;
+      } else {
+        badge.className = 'version-badge premium';
+        badge.innerHTML = '✨ 高级版';
+        // 💡 给他绑定一个专属的 Toast 提示
+        badge.onclick = function() {
+            showDictToast("👑 您已经是尊贵的高级版用户了！", "success");
+        };
+      }
+    }
+
+    // ... 剩下的解锁逻辑保持不变 ...
+    // 注意：试用期内，底部的“导出”按钮在逻辑层面依然是被拦截的
+
+    // 试用期内横幅依然显示（提醒购买），正式版则隐藏
+    if (banner) {
+        banner.style.display = (mode === 'trial') ? 'flex' : 'none';
+        if (mode === 'trial') {
+            banner.innerHTML = `🎁 正在免费试用全功能高加版！制作不易，赞助作者解锁永久高级版 ✨ <button onclick="showPremiumModal()" style="margin-left:10px; background:rgba(255,255,255,0.2); border:none; color:#fff; padding:6px 12px; border-radius:6px; cursor:pointer;">立即购买</button> <button class="ub-close" onclick="closeUpgradeBanner(event)">&times;</button>`;
+        }
+    }
+
+    // 解锁逻辑...
+    document.querySelectorAll('.premium-locked').forEach(el => {
+      el.classList.remove('premium-locked');
+      el.onclick = el._originalOnclick || el.onclick;
+    });
+    document.querySelectorAll('.modal-tab.premium-tab-locked').forEach(el => {
+      el.classList.remove('premium-tab-locked');
+      el.style.pointerEvents = '';
+    });
+
+  } else {
+    // 试用结束或免费版逻辑
+    document.body.classList.remove('premium-active');
+    if (badge) {
+      badge.className = 'version-badge free';
+      badge.innerHTML = '免费版 (试用已结束)';
+      badge.onclick = showPremiumModal;
+    }
+    if (banner) banner.style.display = 'flex';
+    lockPremiumFeatures();
+  }
+
+  // 每次状态变化后检查是否需要显示绑定提醒
+  if (typeof updateBindReminder === 'function') updateBindReminder();
+}
+
+function lockPremiumFeatures() {
+  // 仅锁定侧边栏的：批量复习 （练习模式和翻卡测验现在免费）
+  const sidebarBtns = document.querySelectorAll('#sbActions_stubborn .btn');
+  sidebarBtns.forEach(btn => {
+    const text = btn.textContent;
+    if (text.includes('批量复习')) {
+      btn._originalOnclick = btn.onclick;
+      btn.classList.add('premium-locked');
+      btn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); showPremiumModal(); };
+    }
+  });
+
+
+
+  // 锁定数据管理弹窗中的特定tab
+  // 在 openModal 被调用时动态锁定
+}
+
+// 拦截数据管理弹窗的tab
+const _origSwitchTab = window.switchTab;
+// 将在 DOMContentLoaded 后覆盖
+
+function lockModalTabs() {
+  // 已废弃：不再直接锁定顶部 Tab 标签，允许免费用户点进来查看界面
+}
+
+// 监听弹窗打开，动态锁定tab
+const _origOpenModal = window.openModal;
+
+// ---- 弹窗控制 ----
+function showPremiumModal() {
+  document.getElementById('premiumModal').classList.add('show');
+  document.getElementById('premiumKeyInput').focus();
+}
+// ---- 横幅关闭逻辑（每天只提示一次） ----
+function closeUpgradeBanner(event) {
+  event.stopPropagation(); // 阻止事件冒泡，防止点关闭时弹出了激活窗口
+  document.getElementById('upgradeBanner').style.display = 'none';
+  // 在本地存储中记录今天的日期
+  localStorage.setItem('vocab_banner_closed_date', new Date().toDateString());
+}
+function closePremiumModal() {
+  document.getElementById('premiumModal').classList.remove('show');
+  document.getElementById('premiumKeyInput').value = '';
+  const msg = document.getElementById('premiumMsg');
+  msg.style.opacity = '0';
+}
+
+function showPremiumMsg(text, color) {
+  const el = document.getElementById('premiumMsg');
+  el.textContent = text;
+  el.style.color = color;
+  el.style.opacity = '1';
+}
+
+// ---- 激活 ----
+async function activatePremium() {
+  const input = document.getElementById('premiumKeyInput').value.trim().toUpperCase();
+  if (!input) { showPremiumMsg('请输入秘钥', '#e74c3c'); return; }
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '验证中...';
+
+  try {
+    // 调用后端函数,一次搞定所有激活逻辑
+    const result = await sbRpc('activate_license', {
+      p_key: input,
+      p_device_id: _deviceId
+    });
+
+    if (!result.success) {
+      showPremiumMsg('❌ ' + (result.reason || '激活失败'), '#e74c3c');
+      btn.disabled = false; btn.textContent = '激活高级版';
+      return;
+    }
+
+    // 激活成功(首次或同设备重激活都是成功)
+    localStorage.setItem(PREMIUM_STORAGE_KEY, JSON.stringify({ key: input, device_id: _deviceId }));
+    const msg = result.already_activated
+      ? '✅ 欢迎回来,高级版已激活!'
+      : '✅ 高级版激活成功!';
+    showPremiumMsg(msg, '#2d9d6a');
+
+    // 如果是首次激活,800ms后弹出手机号绑定窗(已激活过的不再打扰)
+    setTimeout(() => {
+      closePremiumModal();
+      applyPremiumState(true);
+      if (!result.already_activated) {
+        setTimeout(() => openBindPhoneModal(input), 400);
+      }
+    }, 800);
+
+  } catch (e) {
+    showPremiumMsg('⚠️ 网络错误,请检查网络后重试', '#e74c3c');
+  }
+
+  btn.disabled = false; btn.textContent = '激活高级版';
+}
+
+// ==================== 账号系统:绑定手机号 ====================
+let _pendingBindKey = null;
+
+// ==================== 持续提醒绑定手机号 ====================
+// 检查并显示/隐藏提醒按钮
+function updateBindReminder() {
+  const btn = document.getElementById('bindReminderBtn');
+  if (!btn) return;
+
+  // 只对"正式高级版用户"且"未绑定手机号"的情况显示
+  if (!isPremium || isTrialMode) {
+    btn.classList.remove('show');
+    return;
+  }
+
+  const stored = localStorage.getItem(PREMIUM_STORAGE_KEY);
+  if (!stored) { btn.classList.remove('show'); return; }
+
+  try {
+    const data = JSON.parse(stored);
+    // 已绑定过手机号就不提醒了
+    if (data.phone) {
+      btn.classList.remove('show');
+    } else {
+      btn.classList.add('show');
+    }
+  } catch (_) {
+    btn.classList.remove('show');
+  }
+}
+
+// 点击提醒按钮 → 打开绑定弹窗(带上当前激活码)
+function openBindReminderFlow() {
+  const stored = localStorage.getItem(PREMIUM_STORAGE_KEY);
+  if (!stored) { showDictToast && showDictToast('未找到激活码', 'error'); return; }
+  try {
+    const data = JSON.parse(stored);
+    if (data.key) {
+      openBindPhoneModal(data.key);
+    }
+  } catch (e) {
+    console.error('解析激活码失败', e);
+  }
+}
+
+function openBindPhoneModal(key) {
+  _pendingBindKey = key;
+  document.getElementById('bindPhoneInput').value = '';
+  const msg = document.getElementById('bindPhoneMsg');
+  msg.style.opacity = '0';
+  document.getElementById('bindPhoneModal').classList.add('show');
+  setTimeout(() => document.getElementById('bindPhoneInput').focus(), 100);
+}
+
+function closeBindPhoneModal() {
+  document.getElementById('bindPhoneModal').classList.remove('show');
+  _pendingBindKey = null;
+}
+
+function showBindMsg(text, color) {
+  const el = document.getElementById('bindPhoneMsg');
+  el.textContent = text;
+  el.style.color = color;
+  el.style.opacity = '1';
+}
+
+async function submitBindPhone() {
+  const phone = document.getElementById('bindPhoneInput').value.trim();
+  if (!phone) { showBindMsg('请输入手机号', '#e74c3c'); return; }
+  if (!/^1[3-9]\d{9}$/.test(phone)) {
+    showBindMsg('❌ 手机号格式不正确', '#e74c3c');
+    return;
+  }
+  if (!_pendingBindKey) {
+    showBindMsg('❌ 未找到激活码,请重新激活', '#e74c3c');
+    return;
+  }
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '绑定中...';
+
+  try {
+    const result = await sbRpc('bind_phone_to_license', {
+      p_phone: phone,
+      p_license_key: _pendingBindKey,
+      p_device_id: _deviceId
+    });
+
+    if (!result.success) {
+      showBindMsg('❌ ' + (result.reason || '绑定失败'), '#e74c3c');
+      btn.disabled = false; btn.textContent = '确认绑定';
+      return;
+    }
+
+    // 保存账号信息到本地(便于之后自动识别)
+    const stored = JSON.parse(localStorage.getItem(PREMIUM_STORAGE_KEY) || '{}');
+    stored.phone = phone;
+    localStorage.setItem(PREMIUM_STORAGE_KEY, JSON.stringify(stored));
+
+    // 立即隐藏右上角提醒按钮
+    updateBindReminder();
+    // 显示凭证信息,让用户保存
+    showBindCredentials(phone, _pendingBindKey);
+
+  } catch (e) {
+    showBindMsg('⚠️ 网络错误,请重试', '#e74c3c');
+  }
+  // 绑定成功后展示凭证,让用户保存
+function showBindCredentials(phone, key) {
+  const card = document.querySelector('#bindPhoneModal > div');
+  card.innerHTML = `
+    <div style="font-size: 40px; margin-bottom: 12px;">✅</div>
+    <h2 style="font-size: 19px; font-weight: 700; margin-bottom: 6px; color: var(--text);">绑定成功!</h2>
+    <p style="font-size: 13px; color: #e74c3c; margin-bottom: 16px; line-height: 1.6; font-weight: 600;">
+      ⚠️ 请务必保存以下信息!<br>换设备时需要用它登录,否则无法恢复高级版
+    </p>
+    <div style="
+      background: var(--bg, #f5f5f0); border: 1.5px solid var(--border, #e2e0d8);
+      border-radius: 10px; padding: 16px; text-align: left; margin-bottom: 16px;
+    ">
+      <div style="margin-bottom: 10px;">
+        <span style="font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 4px;">账号(手机号)</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; letter-spacing: 2px; color: var(--text);">${phone}</span>
+      </div>
+      <div>
+        <span style="font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 4px;">密码(激活码)</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; letter-spacing: 1px; color: var(--text);">${key}</span>
+      </div>
+    </div>
+    <button onclick="copyCredentials('${phone}', '${key}')" style="
+      width: 100%; padding: 13px;
+      background: linear-gradient(135deg, var(--accent, #4a6cf7), #8b6cc0);
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+    ">📋 一键复制账号密码</button>
+    <p style="font-size: 12px; color: var(--text-dim); margin-top: 10px; line-height: 1.5;">
+      建议复制后粘贴到备忘录,或直接截图保存
+    </p>
+    <button onclick="closeBindAndReset()" style="
+      margin-top: 10px; background: none; border: none;
+      color: var(--text-dim); font-size: 13px; cursor: pointer;
+    ">我已保存,关闭</button>
+  `;
+}
+
+function copyCredentials(phone, key) {
+  const text = '【VOCAB LAB 高级版账号】\\n账号(手机号): ' + phone + '\\n密码(激活码): ' + key;
+  navigator.clipboard.writeText(text).then(() => {
+    if (typeof showDictToast === 'function') {
+      showDictToast('已复制到剪贴板,请粘贴保存!', 'success');
+    } else {
+      alert('已复制到剪贴板!');
+    }
+  });
+}
+
+function closeBindAndReset() {
+  document.getElementById('bindPhoneModal').classList.remove('show');
+  _pendingBindKey = null;
+  // 下次打开时恢复原始内容(重新加载页面即可恢复)
+}
+
+  btn.disabled = false; btn.textContent = '确认绑定';
+}
+
+// ==================== 账号系统:老用户登录 ====================
+function openLoginModal() {
+  closePremiumModal();
+  document.getElementById('loginPhoneInput').value = '';
+  document.getElementById('loginKeyInput').value = '';
+  const msg = document.getElementById('loginMsg');
+  msg.style.opacity = '0';
+  document.getElementById('loginModal').classList.add('show');
+  setTimeout(() => document.getElementById('loginPhoneInput').focus(), 100);
+}
+
+function closeLoginModal() {
+  document.getElementById('loginModal').classList.remove('show');
+}
+
+function showLoginMsg(text, color) {
+  const el = document.getElementById('loginMsg');
+  el.textContent = text;
+  el.style.color = color;
+  el.style.opacity = '1';
+}
+
+async function submitLogin() {
+  const phone = document.getElementById('loginPhoneInput').value.trim();
+  const key = document.getElementById('loginKeyInput').value.trim().toUpperCase();
+
+  if (!phone || !key) {
+    showLoginMsg('请填写完整信息', '#e74c3c');
+    return;
+  }
+  if (!/^1[3-9]\d{9}$/.test(phone)) {
+    showLoginMsg('❌ 手机号格式不正确', '#e74c3c');
+    return;
+  }
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '登录中...';
+
+  try {
+    const result = await sbRpc('login_with_account', {
+      p_phone: phone,
+      p_license_key: key,
+      p_new_device_id: _deviceId
+    });
+
+    if (!result.success) {
+      showLoginMsg('❌ ' + (result.reason || '登录失败'), '#e74c3c');
+      btn.disabled = false; btn.textContent = '登录并恢复高级版';
+      return;
+    }
+
+    // 登录成功,存储本地信息
+    localStorage.setItem(PREMIUM_STORAGE_KEY, JSON.stringify({
+      key: result.license_key,
+      device_id: _deviceId,
+      phone: phone
+    }));
+
+    showLoginMsg('✅ 登录成功,正在恢复高级版...', '#2d9d6a');
+    setTimeout(() => {
+      closeLoginModal();
+      applyPremiumState(true);
+    }, 1000);
+  } catch (e) {
+    showLoginMsg('⚠️ 网络错误,请重试', '#e74c3c');
+  }
+
+  btn.disabled = false; btn.textContent = '登录并恢复高级版';
+}
+
+// 回车键
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('loginModal').classList.contains('show')) {
+      submitLogin();
+    } else if (document.getElementById('bindPhoneModal').classList.contains('show')) {
+      submitBindPhone();
+    } else if (document.getElementById('premiumModal').classList.contains('show')) {
+      activatePremium();
+    }
+  }
+  if (e.key === 'Escape') {
+    closePremiumModal();
+    closeBindPhoneModal();
+    closeLoginModal();
+  }
+});
+
+// ---- 启动时检查 ----
+async function checkPremiumStatus() {
+  // 1. 首先检查是否有正式的激活秘钥
+  const stored = localStorage.getItem(PREMIUM_STORAGE_KEY);
+  if (stored) {
+    try {
+      const data = JSON.parse(stored);
+      // 调用后端验证函数,只返回 true/false
+      const result = await sbRpc('verify_license', {
+        p_key: data.key,
+        p_device_id: _deviceId
+      });
+      if (result && result.valid) {
+        // 如果后端告知已绑定手机号,同步到本地(防止误提醒)
+        if (result.has_account && result.phone && !data.phone) {
+          data.phone = result.phone;
+          localStorage.setItem(PREMIUM_STORAGE_KEY, JSON.stringify(data));
+        }
+        applyPremiumState(true, 'premium'); // 正式版激活
+        return;
+      }
+      // 被其他设备踢出 → 清除本地,提示用户
+      if (result && result.reason === '已在其他设备登录') {
+        localStorage.removeItem(PREMIUM_STORAGE_KEY);
+        setTimeout(() => {
+          alert('⚠️ 你的账号已在其他设备登录,当前设备已退出高级版。\n如需继续使用,请重新激活或登录。');
+        }, 500);
+      }
+    } catch (e) {
+      // 网络故障时降级:本地有记录就认
+      try {
+        const data = JSON.parse(stored);
+        if (data.device_id === _deviceId) {
+          applyPremiumState(true, 'premium');
+          return;
+        }
+      } catch (_) {}
+    }
+  }
+
+  // 2. 如果没有正式秘钥，检查是否在试用期内
+  const trial = getTrialStatus();
+  if (trial.isActive) {
+    applyPremiumState(true, 'trial', trial.daysLeft); // 试用期解锁
+    return;
+  }
+
+  // 3. 既无秘钥也过了试用期，降级为免费版
+  localStorage.removeItem(PREMIUM_STORAGE_KEY);
+  applyPremiumState(false);
+}
+
+
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', () => {
+  // 劫持 openModal 以动态锁定 tab
+  if (typeof openModal === 'function') {
+    const _orig = openModal;
+    window.openModal = function() {
+      _orig.apply(this, arguments);
+      setTimeout(lockModalTabs, 50);
+    };
+  }
+
+
+  // 👇 新增：检查今天是否已经关闭过横幅
+  const closedDate = localStorage.getItem('vocab_banner_closed_date');
+  const today = new Date().toDateString();
+  if (closedDate === today) {
+    // 如果记录的日期就是今天，则直接隐藏横幅
+    const banner = document.getElementById('upgradeBanner');
+    if (banner) banner.style.display = 'none';
+  }
+
+  checkPremiumStatus();
+});
+</script>
+<!-- ========== 🔑 免费增值秘钥验证系统 END ========== -->
+
+
+
+<div id="contextMenu" class="context-menu">
+  <div class="context-menu-item" id="cmEdit">✏️ 修改单词</div>
+  <div class="context-menu-item cm-danger" id="cmDelete">🗑️ 删除单词</div>
+</div>
+
+<div class="sidebar-wrapper">
+  <div class="sidebar">
+    <div style="display: flex; border-bottom: 1px solid var(--border);">
+      <button class="sidebar-tab active" onclick="switchSidebarTab('stubborn')" id="tab_stubborn">⭐ 顽固单词</button>
+      <button class="sidebar-tab" onclick="switchSidebarTab('progress')" id="tab_progress">📈 学习进度</button>
+
+    </div>
+
+    <div id="sbActions_stubborn" style="padding: 12px 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 4px;">
+      <button class="btn btn-sm" id="batchReviewBtn" onclick="toggleBatchReview()" style="background: var(--surface-hover); padding: 5px 6px; flex: 1; justify-content: center;">🧠 批量复习</button>
+      <button class="btn btn-sm" onclick="openPracticeMenu('stubborn')" style="background: var(--surface-hover); padding: 5px 6px; flex: 1; justify-content: center;">🎯 练习模式</button>
+      <button class="btn btn-sm" onclick="startTest()" style="background: var(--surface-hover); padding: 5px 6px; flex: 1; justify-content: center;">⌨️ 翻卡测验</button>
+    </div>
+
+    <div class="sidebar-content" id="sbList_stubborn" style="flex: 1; display: block;"></div>
+    <div class="sidebar-content" id="sbList_progress" style="flex: 1; display: none;">
+      <div id="heatmapArea" class="heatmap-container"></div>
+      <div id="progressItemsList"></div>
+    </div>
+  </div>
+</div>
+
+<header class="app-header">
+  <div class="app-title-group">
+    <div class="app-title-group">
+      <div class="app-title">VOCAB LAB · 单词记忆宫殿</div>
+      <button class="author-btn" onclick="openAuthorModal()">@周肥 / 使用指南</button>
+      <button id="headerVersionBadge" class="version-badge free" onclick="showPremiumModal()">免费版</button>
+      <button id="bindReminderBtn" onclick="openBindReminderFlow()" style="
+display: none;
+margin-left: 8px;
+padding: 4px 12px;
+background: linear-gradient(135deg, #4a6cf7, #8b6cc0);
+color: #fff; border: none; border-radius: 14px;
+font-size: 12px; font-weight: 600; cursor: pointer;
+box-shadow: 0 2px 8px rgba(74, 108, 247, 0.3);
+animation: bindReminderStream 3s ease-in-out infinite;
+transition: transform 0.2s;
+vertical-align: middle;
+" title="尽快绑定手机号,换设备也能继续使用高级版">
+        📱 绑定手机号
+      </button>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="切换主题">🌙</button>
+
+    <select class="size-select" id="colSelect" onchange="changeLayout()" title="网格：列数"></select>
+    <span style="color:var(--text-dim);font-size:12px;margin:0 -2px;">×</span>
+    <select class="size-select" id="rowSelect" onchange="changeLayout()" title="网格：行数"></select>
+
+    <select class="size-select" id="fontSelect" onchange="changeFont()" title="调节字号大小"></select>
+    <select class="size-select" id="sizeSelect" onchange="changeSize()" title="调节卡片大小"></select>
+    <select class="size-select" id="gapSelect" onchange="changeGap()" title="调节卡片间距"></select>
+
+    <select class="size-select voice-select" id="voiceSelect" onchange="changeVoice()" title="语音引擎设置">
+      <option value="default">正在加载语音引擎...</option>
+    </select>
+
+    <select class="size-select" id="phoneticSelect" onchange="changeDisplay('phonetic')" title="音标显示设置">
+      <option value="show" selected>音标: 显示</option>
+      <option value="hover">音标: 遮挡(悬停)</option>
+      <option value="hide">音标: 隐藏</option>
+    </select>
+
+    <select class="size-select" id="meaningSelect" onchange="changeDisplay('meaning')" title="中文释义显示设置">
+      <option value="show" selected>释义: 显示</option>
+      <option value="hover">释义: 遮挡(悬停)</option>
+      <option value="hide">释义: 隐藏</option>
+    </select>
+
+    <select class="speed-select" id="speedSelect" title="发音语速">
+      <option value="0.7">慢速</option><option value="0.85">稍慢</option><option value="1" selected>正常</option><option value="1.2">快速</option>
+    </select>
+
+    <select class="speed-select" id="repeatSelect" title="发音重复次数" onchange="changeRepeat()">
+      <option value="1" selected>读 1 次</option>
+      <option value="2">读 2 次</option>
+      <option value="3">读 3 次</option>
+      <option value="4">读 4 次</option>
+      <option value="5">读 5 次</option>
+    </select>
+
+    <button class="btn" id="shuffleBtn" onclick="toggleShuffle()" title="打乱当前页单词顺序">🔀 暂时乱序</button>
+
+    <button class="btn" id="modeBtn" onclick="toggleStudyMode()" title="切换到复习模式(自动遮挡释义和音标)">📖 学习模式</button>
+
+    <button class="btn" onclick="openPracticeMenu('page')" title="针对当前页单词进行强化练习">🎯 练习模式</button>
+
+    <button class="btn" onclick="playAll()" id="playAllBtn">▶ 播放本页</button>
+
+    <button class="btn" onclick="openModal()">📚 数据管理</button>
+  </div>
+</header>
+
+<div class="info-bar" id="infoBar" style="display:none">
+  <div class="legend-area">
+    <span class="legend-title">释义重要度：</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--m1)"></span>核心</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--m2)"></span>常用</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--m3)"></span>次要</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--m4)"></span>扩展</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--m5)"></span>罕见</span>
+  </div>
+  <div class="stats-area">
+    <div>共 <span class="stat-num" id="totalCount">0</span> 词</div>
+    <span id="pageWordCount" style="font-size: 12px; color: var(--text-dim); font-weight: normal; margin-left: 8px;">(本页 0 词)</span>
+    <div>第 <span class="stat-num" id="currentPage">1</span>/<span class="stat-num" id="totalPages">1</span> 页</div>
+    <div id="activeBankLabel"></div>
+    <div id="planIndicator"></div>
+  </div>
+</div>
+
+<div id="wordGrid" class="word-grid"></div>
+<div id="emptyState" class="empty-state">
+  <div class="icon">📖</div>
+  <h3>选择词库或导入单词</h3>
+  <p>点击右上角「词库 / 导入」按钮，选择内置词库或粘贴自己的单词列表开始学习。</p>
+</div>
+<div class="pagination" id="pagination"></div>
+
+<div class="modal-overlay" id="authorModalOverlay" onclick="if(event.target===this)closeAuthorModal()">
+  <div class="modal" style="max-width: 600px;">
+    <div class="modal-header">
+      <h2>👨‍💻 关于 & 使用指南</h2>
+      <button class="modal-close" onclick="closeAuthorModal()">✕</button>
+    </div>
+    <div class="modal-body" style="line-height: 1.6; font-size: 14px; color: var(--text);">
+      <p style="margin-bottom: 16px;"><strong>作者：</strong>周肥</p>
+      <p style="margin-bottom: 16px; color: var(--text-dim);">欢迎来到 VOCAB LAB！这是一个纯本地化、极简高效且无干扰的英语学习实验室，旨在通过科学的交互设计帮你榨干每一个单词的记忆价值。</p>
+
+      <h3 style="font-size: 15px; margin-top: 20px; margin-bottom: 10px; color: var(--accent);">📖 核心功能指南</h3>
+      <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 10px;">
+<li><strong>🗂️ 多学习计划：</strong>支持创建多个独立计划（如考研、雅思）。每个计划拥有<strong>完全隔离</strong>的词库、学习进度和顽固单词，可在“数据管理”中无缝切换与重命名。</li>
+<li><strong>🧘 沉浸模式：</strong>按下 <strong>F11</strong> 全屏时可一键开启。开启后系统将隐藏所有菜单、设置和页码，仅保留纯净的单词卡片，助你进入深度专注状态（按 <strong>Esc</strong> 退出）。</li>
+<li><strong>🔥 批量复习：</strong>在侧边栏点击「批量复习」，可将所有顽固单词瞬间搬运至首页进行突击强化。复习模式不影响正式计划进度，刷新页面或点击退出即可一键还原。</li>
+<li><strong>📖 导入词库：</strong>点击右上角「词库 / 导入」，支持内置词库或手动粘贴列表。系统支持带中文导入，也支持纯英文导入后自动联网抓取释义。</li>
+<li><strong>🎯 学习/复习模式：</strong>右上角一键切换。练习模式下会自动模糊释义与音标，鼠标悬停时才“刮开”显示，是自我测试与听写的绝佳工具。</li>
+<li><strong>💡 深度解释：</strong>将鼠标悬停在卡片右下角“灯泡”图标上 <strong>0.3 秒</strong>，系统将全网抓取发音、词性、近义词及真实的双语语境例句。</li>
+<li><strong>⭐ 顽固单词表：</strong>遇到难点点击“星号”收藏。通过侧边栏可随时查看列表，并支持针对顽固单词进行“翻卡测验”或“练习模式”强化。</li>
+<li><strong>📈 进度自动同步：</strong>系统实时记录每个计划的阅读轨迹。配合侧边栏的“学习进度”热力图，可随时点击页码回到当时的进度继续战斗。</li>
+<li><strong>🔊 循环发音与设置：</strong>可在顶部工具栏自由调整 <strong>列数/行数/字号/间距</strong>。支持单词循环朗读 1~5 次，并提供国内外多种自然语音引擎选择。</li>
+<li><strong>⌨️ 键盘快捷键：</strong>
+    <ul>
+        <li><code>←</code> / <code>→</code>：快速翻页。</li>
+        <li><code>F11</code>：进入全屏并触发沉浸模式询问。</li>
+        <li><code>Esc</code>：退出沉浸模式或关闭所有弹窗。</li>
+    </ul>
+</li>
+<li><strong>🗄️ 数据安全：</strong>支持选择性导出/导入特定计划的数据项。建议定期在“数据管理”中导出备份，确保你的记忆宫殿永不丢失。</li>
+      <p style="margin-bottom: 16px; color: var(--text-dim);">   </p>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>📚 数据管理</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div style="padding:0 24px;">
+      <div class="modal-tabs">
+        <button class="modal-tab active" onclick="switchTab('plan',this)">计划管理</button>
+        <button class="modal-tab" onclick="switchTab('exam',this)">常用词库</button>
+        <button class="modal-tab" onclick="switchTab('import',this)">导入词库</button>
+        <button class="modal-tab" onclick="switchTab('data',this)">数据管理</button>
+        <button class="modal-tab" onclick="switchTab('clear',this)">清除数据</button>
+      </div>
+    </div> <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" id="editModalOverlay" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal" style="max-width: 400px;">
+    <div class="modal-header">
+      <h2>✏️ 修改单词</h2>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px;">
+      <div>
+        <label style="font-size: 12px; color: var(--text-dim); margin-bottom: 6px; display: block;">单词</label>
+        <input type="text" id="editWordInput" class="edit-input" placeholder="输入英文单词">
+      </div>
+      <div>
+        <label style="font-size: 12px; color: var(--text-dim); margin-bottom: 6px; display: block;">音标</label>
+        <input type="text" id="editPhoneticInput" class="edit-input" placeholder="例如: /əˈbændən/">
+      </div>
+      <div>
+        <label style="font-size: 12px; color: var(--text-dim); margin-bottom: 6px; display: block;">中文释义 (多个释义请用分号 ; 隔开)</label>
+        <textarea id="editMeaningInput" class="edit-input" style="min-height: 80px; resize: vertical;" placeholder="例如: 放弃; 抛弃"></textarea>
+      </div>
+      <button class="btn btn-primary" style="padding: 12px; justify-content: center; font-size: 14px;" onclick="saveEditWord()">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="testModalOverlay" onclick="if(event.target===this)closeTestModal()">
+  <div class="modal test-modal">
+    <div class="modal-header">
+      <h2>📝 顽固单词测验</h2>
+      <button class="modal-close" onclick="closeTestModal()">✕</button>
+    </div>
+
+    <div class="test-body" id="testActiveView">
+      <div class="test-word-display" id="testWordText">Word</div>
+
+      <div class="test-hint-area">
+        <div class="test-hint-text" id="testWordMeaning">此处为释义</div>
+        <div class="test-hint-mask">👁️ 鼠标悬停看提示</div>
+      </div>
+
+      <div class="test-btns">
+        <button class="test-btn test-btn-no" onclick="answerTest(false)">❌ 没记住</button>
+        <button class="test-btn test-btn-yes" onclick="answerTest(true)">✅ 记住了</button>
+      </div>
+    </div>
+    <div class="test-body" id="spellActiveView" style="display:none; padding: 30px;">
+      <div style="font-size:13px; color:var(--text-dim); margin-bottom: 20px; font-family:'JetBrains Mono';" id="spellProgress">1 / 10</div>
+
+      <button class="speak-btn" style="margin: 0 auto 16px; width:48px; height:48px;" onclick="speak(testQueue[testCurrentIndex].word)" title="重新发音">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>
+      </button>
+
+      <div style="font-size: 18px; color: var(--text); font-weight: 500; line-height: 1.5; padding: 0 20px;" id="spellWordMeaning">中文释义</div>
+      <div style="font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text-dim); margin-top:8px;" id="spellPhonetic"></div>
+
+      <div class="spell-hint-text" id="spellHint"></div>
+
+      <input type="text" id="spellInput" class="spell-input" autocomplete="off" spellcheck="false" placeholder="Type here...">
+
+      <div style="font-size: 12px; color: var(--text-dim); margin-top: 10px;">
+        按 <kbd>Enter</kbd> 提交 · 按 <kbd>Tab</kbd> 提示 · 按 <kbd>Esc</kbd> 看答案
+      </div>
+    </div>
+
+    <div class="test-body" id="testSummaryView" style="display:none;">
+      <div class="test-summary" id="testSummaryText"></div>
+      <div id="testActionArea">
+        <p style="margin-bottom:16px; color:var(--text-dim); font-size:13px;">是否将记住了的单词从顽固列表中移除？</p>
+        <div class="test-btns">
+          <button class="test-btn test-btn-no" style="background:var(--surface-hover); color:var(--text); border:1px solid var(--border); box-shadow:none;" onclick="finishTest(false)">保留记录</button>
+          <button class="test-btn test-btn-yes" onclick="finishTest(true)">彻底移除</button>
+        </div>
+      </div>
+      <div id="testDoneArea" style="display:none;">
+        <button class="test-btn test-btn-yes" style="width:100%;" onclick="closeTestModal()">完成</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="practiceMenuOverlay" onclick="if(event.target===this) document.getElementById('practiceMenuOverlay').classList.remove('show')">
+  <div class="modal" style="max-width: 480px;">
+    <div class="modal-header">
+      <h2>🎯 本页强化训练</h2>
+      <button class="modal-close" onclick="document.getElementById('practiceMenuOverlay').classList.remove('show')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 10px;">针对当前页面的单词进行专项训练，请选择练习模式：</p>
+      <div class="prac-menu-grid">
+        <div class="prac-menu-card" onclick="startPractice('spell')">
+          <div class="prac-menu-icon">⌨️</div>
+          <div><div class="prac-menu-title">拼写挑战 (Spell)</div><div class="prac-menu-desc">看中文释义，盲打拼写出正确的英文单词</div></div>
+        </div>
+        <div class="prac-menu-card" onclick="startPractice('choice')">
+          <div class="prac-menu-icon">🔀</div>
+          <div><div class="prac-menu-title">词义辨析 (Choice)</div><div class="prac-menu-desc">随机英译中/中译英，四选一挑战</div></div>
+        </div>
+        <div class="prac-menu-card" onclick="startPractice('listen')">
+          <div class="prac-menu-icon">🎧</div>
+          <div><div class="prac-menu-title">听音辨意 (Listen)</div><div class="prac-menu-desc">全网抓取原声例句，盲听后选择正确词义</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="practiceAppOverlay" onclick="if(event.target===this) forceQuitPractice()">
+  <div class="modal test-modal" style="max-width: 540px;">
+    <div class="modal-header" style="border-bottom: none; padding-bottom: 0;">
+      <h2 id="pracModeTitle" style="font-size: 15px; color: var(--text-dim);">练习模式</h2>
+      <button class="modal-close" onclick="forceQuitPractice()">✕</button>
+    </div>
+    <div class="test-body" style="padding-top: 10px; min-height: 380px; justify-content: flex-start;">
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 20px; text-align: center; letter-spacing: 2px;" id="pracProgress">0 / 0</div>
+      <div class="prac-question-area" id="pracQuestionArea"></div>
+      <div id="pracInteractArea" style="width: 100%;"></div>
+    </div>
+  </div>
+</div>
+
+
+<div id="explainPopover" class="explain-popover" onmouseenter="clearTimeout(explainHideTimer)" onmouseleave="handleExplainMouseLeave()">
+
+
+  <div class="explain-popover-header" style="display: flex; align-items: center; justify-content: space-between;">
+    <h2 style="font-size: 16px; margin: 0; font-weight: 600;">💡 <span id="explainWordTitle" style="color:var(--accent); font-family:'Crimson Pro',serif;"></span> 的深度解释</h2>
+
+    <div style="display: flex; align-items: center; gap: 10px; font-size: 13px;">
+      <span id="currentDictLabel">正在检测...</span>
+      <button onclick="toggleDictSource()" title="手动切换词典源 (有道/Google)" style="cursor:pointer; background:var(--surface-hover); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:12px; color:var(--text); display: flex; align-items: center; gap: 4px; transition: all 0.2s;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.92-10.22l-2.02 2.02"/></svg>
+        切换
+      </button>
+    </div>
+  </div>
+
+  <div class="explain-popover-body" id="explainResultArea"></div>
+</div>
+
+<div class="modal-overlay" id="clearModalOverlay" onclick="if(event.target===this)closeClearModal()">
+  <div class="modal" style="max-width: 400px;">
+    <div class="modal-header">
+      <h2>🗑️ 清除数据</h2>
+      <button class="modal-close" onclick="closeClearModal()">✕</button>
+    </div>
+    <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px;">
+      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 5px;">请勾选您要清除的数据：</p>
+
+      <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+        <input type="checkbox" id="clearWords" style="width: 16px; height: 16px;">
+        <span style="font-size: 14px; color: var(--text);">当前词库 (清空后需重新导入)</span>
+      </label>
+
+      <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+        <input type="checkbox" id="clearStubborn" style="width: 16px; height: 16px;">
+        <span style="font-size: 14px; color: var(--text);">⭐ 顽固单词 (清空收藏列表)</span>
+      </label>
+
+      <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+        <input type="checkbox" id="clearProgress" style="width: 16px; height: 16px;">
+        <span style="font-size: 14px; color: var(--text);">📈 学习进度 (清空热力图和翻页记录)</span>
+      </label>
+
+      <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+        <input type="checkbox" id="clearSettings" style="width: 16px; height: 16px;">
+        <span style="font-size: 14px; color: var(--text);">⚙️ 页面设置 (恢复默认字号、主题、发音等)</span>
+      </label>
+
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="btn" style="flex: 1; padding: 12px; justify-content: center; font-size: 14px;" onclick="closeClearModal()">取消</button>
+        <button class="btn btn-primary" style="flex: 1; padding: 12px; justify-content: center; font-size: 14px; background: #e74c3c; border-color: #e74c3c;" onclick="executeClear()">确认清除</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="dictToast" style="position:fixed; top: -50px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); padding: 10px 20px; border-radius: 30px; font-size: 14px; font-weight: 500; opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 9999; white-space: nowrap;"></div>
+
+
+<script>
+  // ===================== APP STATE =====================
+  let isReviewMode = false;      // 💡 是否处于批量复习模式
+  let originalState = null;      // 💡 用于备份进入复习前的状态
+  let allWords = [];
+  let plans = {}; // 💡 新增：存储所有计划的巨型对象
+  let currentPlanId = 'default'; // 💡 新增：当前正在使用的计划 ID
+  let stubbornDict = {};
+  let learningProgress = [];
+  let curPage = 1;
+  let playingAll = false;
+  let PER_PAGE = 20;
+  let activeBank = '';
+  let currentStudyMode = 'learn';
+  const MCOLORS = ['var(--m1)','var(--m2)','var(--m3)','var(--m4)','var(--m5)'];
+
+  let testQueue = [];
+  let testCurrentIndex = 0;
+  let testRememberedWords = [];
+
+  // 新增乱序状态变量
+  let isShuffled = false;
+  let shuffledIndices = [];
+
+// 💡 全屏/沉浸模式监听逻辑（已改为异步居中弹窗）
+// 💡 修复版：全屏/沉浸模式监听（兼容浏览器缩放）
+window.addEventListener('resize', async () => {
+    // 💡 使用 matchMedia 检测全屏，这是最兼容缩放比例的方式
+    const isFullScreen = window.matchMedia('(display-mode: fullscreen)').matches ||
+                         window.innerHeight === window.screen.height ||
+                         (window.outerHeight === window.screen.height && window.outerWidth === window.screen.width);
+
+    const zenActive = document.body.getAttribute('data-zen-mode') === 'on';
+
+    if (isFullScreen) {
+        if (!zenActive) {
+            // 进入全屏但未开启沉浸模式
+            const userChoice = await customConfirm("📢 检测到全屏状态，是否进入【沉浸模式】？\n\n开启后将隐藏所有菜单和设置，只保留单词卡片。", "info");
+            if (userChoice) {
+                enterZenMode();
+            }
+        }
+    } else {
+        if (zenActive) {
+            // 退出全屏时自动关闭沉浸模式
+            exitZenMode();
+        }
+    }
+});
+
+function enterZenMode() {
+    document.body.setAttribute('data-zen-mode', 'on');
+    showDictToast("🧘 沉浸模式已开启", "success");
+}
+
+function exitZenMode() {
+    document.body.removeAttribute('data-zen-mode');
+    showDictToast("🔄 已退出沉浸模式", "success");
+}
+
+  // ===================== 词典源状态管理与 UI =====================
+let currentDictSource = localStorage.getItem('vocab-dict-source') || 'google'; // 默认优先尝试 google
+let lastNotifiedState = null; // 新增：记录上一次通知的状态，防止频繁弹窗打扰
+
+function toggleDictSource() {
+    currentDictSource = currentDictSource === 'google' ? 'youdao' : 'google';
+    localStorage.setItem('vocab-dict-source', currentDictSource);
+
+    // 新增：手动切换时弹出提示，并更新记录状态
+    const msg = currentDictSource === 'google' ? '🔄 已手动切换至 Google (国外)' : '🔄 已手动切换至 有道 (国内)';
+    showDictToast(msg, 'success');
+    lastNotifiedState = currentDictSource;
+
+    if (currentExplainWord) {
+        delete explainCache[currentExplainWord]; // 清除当前单词的缓存
+        document.getElementById('explainResultArea').innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-dim);">🔄 正在切换数据源并重新抓取...</div>';
+        fetchDeepExplanation(currentExplainWord);
+    }
+}
+
+function updateDictHeaderUI(sourceState) {
+    const label = document.getElementById('currentDictLabel');
+    if (sourceState === 'google') {
+        label.innerHTML = '<span style="color: #4285F4; font-weight:600;">Google (国外)</span>';
+    } else if (sourceState === 'youdao') {
+        label.innerHTML = '<span style="color: #E33E33; font-weight:600;">有道 (国内)</span>';
+    } else if (sourceState === 'youdao_fallback') {
+        label.innerHTML = '<span style="color: #E33E33; font-weight:600;">有道 (自动降级)</span>';
+    }
+}
+
+function showDictToast(msg, type) {
+      const toast = document.getElementById('dictToast');
+      if (!toast) return;
+      toast.innerHTML = msg;
+      toast.style.borderColor = type === 'success' ? 'var(--green)' : '#e74c3c';
+      toast.style.color = type === 'success' ? 'var(--green)' : '#e74c3c';
+      toast.style.opacity = '1';
+      toast.style.top = '40px'; // 💡 向下滑出到 40px
+      setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.top = '-50px'; // 💡 收回屏幕外部
+      }, 2500);
+  }
+
+  // ===================== 补全：自定义确认弹窗逻辑 =====================
+  let confirmResolve = null;
+
+  async function customConfirm(msg, type = 'warning') {
+    const overlay = document.getElementById('confirmModalOverlay');
+    const modal = overlay.querySelector('.modal');
+    document.getElementById('confirmMessage').innerText = msg;
+    document.getElementById('confirmIcon').innerText = type === 'warning' ? '⚠️' : '📢';
+
+    // 自动适配按钮颜色
+    const submitBtn = document.getElementById('confirmSubmitBtn');
+    if (msg.includes('清除') || msg.includes('删除')) {
+      submitBtn.style.background = '#e74c3c';
+      submitBtn.style.borderColor = '#e74c3c';
+    } else {
+      submitBtn.style.background = 'var(--accent)';
+      submitBtn.style.borderColor = 'var(--accent)';
+    }
+
+    overlay.style.display = 'flex';
+    // 微延迟触发缩放动画
+    setTimeout(() => modal.style.transform = 'scale(1)', 10);
+
+    return new Promise((resolve) => {
+      confirmResolve = resolve;
+    });
+  }
+
+  function handleConfirmChoice(choice) {
+    const overlay = document.getElementById('confirmModalOverlay');
+    overlay.querySelector('.modal').style.transform = 'scale(0.9)';
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      if (confirmResolve) confirmResolve(choice);
+    }, 150);
+  }
+
+
+
+  // ===================== 作者与指南弹窗控制 =====================
+  function openAuthorModal() {
+    document.getElementById('authorModalOverlay').classList.add('show');
+  }
+  function closeAuthorModal() {
+    document.getElementById('authorModalOverlay').classList.remove('show');
+  }
+
+  // ===================== 侧边栏 Tab 切换控制 =====================
+  function switchSidebarTab(tab) {
+    document.getElementById('tab_stubborn').classList.toggle('active', tab === 'stubborn');
+    document.getElementById('tab_progress').classList.toggle('active', tab === 'progress');
+
+    document.getElementById('sbList_stubborn').style.display = tab === 'stubborn' ? 'block' : 'none';
+    document.getElementById('sbActions_stubborn').style.display = tab === 'stubborn' ? 'flex' : 'none';
+    document.getElementById('sbList_progress').style.display = tab === 'progress' ? 'block' : 'none';
+  }
+
+  // ===================== 右键菜单逻辑 =====================
+  let currentEditIndex = -1;
+
+  function showContextMenu(e, index) {
+    e.preventDefault();
+    currentEditIndex = index;
+    const cm = document.getElementById('contextMenu');
+    cm.style.display = 'flex';
+
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (x + cm.offsetWidth > window.innerWidth) x -= cm.offsetWidth;
+    if (y + cm.offsetHeight > window.innerHeight) y -= cm.offsetHeight;
+
+    cm.style.left = x + 'px';
+    cm.style.top = y + 'px';
+  }
+
+  document.addEventListener('click', (e) => {
+    const cm = document.getElementById('contextMenu');
+    if (cm && e.target !== cm && !cm.contains(e.target)) {
+      cm.style.display = 'none';
+      // 💡 新增：沉浸模式下按 Esc 退出全屏同时退出模式
+
+    }
+  });
+
+  document.getElementById('cmDelete').onclick = function() {
+    document.getElementById('contextMenu').style.display = 'none';
+    if (currentEditIndex >= 0 && currentEditIndex < allWords.length) {
+      const wordObj = allWords[currentEditIndex];
+      if(confirm(`确定要删除单词 "${wordObj.word}" 吗？`)) {
+        if (stubbornDict[wordObj.word]) delete stubbornDict[wordObj.word];
+        allWords.splice(currentEditIndex, 1);
+
+        const totalPages = Math.ceil(allWords.length / PER_PAGE) || 1;
+        if (curPage > totalPages) curPage = totalPages;
+
+        saveState();
+        render();
+      }
+    }
+  };
+
+  document.getElementById('cmEdit').onclick = function() {
+    document.getElementById('contextMenu').style.display = 'none';
+    if (currentEditIndex >= 0 && currentEditIndex < allWords.length) {
+      const wordObj = allWords[currentEditIndex];
+      document.getElementById('editWordInput').value = wordObj.word || '';
+      document.getElementById('editPhoneticInput').value = wordObj.phonetic || '';
+
+      let ms = wordObj.meanings && wordObj.meanings.length > 0 ? wordObj.meanings : (wordObj.apiMeanings || []);
+      document.getElementById('editMeaningInput').value = ms.join('; ');
+
+      document.getElementById('editModalOverlay').classList.add('show');
+    }
+  };
+
+  function closeEditModal() {
+    document.getElementById('editModalOverlay').classList.remove('show');
+  }
+
+  function saveEditWord() {
+    if (currentEditIndex >= 0 && currentEditIndex < allWords.length) {
+      const oldWord = allWords[currentEditIndex].word;
+      const newWord = document.getElementById('editWordInput').value.trim();
+      const newPhonetic = document.getElementById('editPhoneticInput').value.trim();
+      const newMeaningsStr = document.getElementById('editMeaningInput').value.trim();
+
+      if (!newWord) return alert("单词不能为空！");
+
+      const newMeanings = newMeaningsStr.split(/[;；]/).map(s => s.trim()).filter(Boolean);
+
+      allWords[currentEditIndex].word = newWord;
+      allWords[currentEditIndex].phonetic = newPhonetic;
+      allWords[currentEditIndex].meanings = newMeanings;
+      if (newMeanings.length > 0) allWords[currentEditIndex].apiMeanings = [];
+
+      if (stubbornDict[oldWord]) {
+        const stubData = stubbornDict[oldWord];
+        delete stubbornDict[oldWord];
+        stubData.word = newWord;
+        stubData.phonetic = newPhonetic;
+        stubData.meanings = newMeanings;
+        if(newMeanings.length > 0) stubData.apiMeanings = [];
+        stubbornDict[newWord] = stubData;
+      }
+
+      saveState();
+
+      const card = document.getElementById(`word-card-${currentEditIndex}`);
+      if (card) {
+          const phEl = card.querySelector('.word-phonetic');
+          if (phEl) phEl.innerHTML = newPhonetic ? esc(newPhonetic) : '';
+          const mEl = card.querySelector('.word-meanings');
+          if (mEl) mEl.innerHTML = renderMeanings(allWords[currentEditIndex]);
+          const tEl = card.querySelector('.word-text');
+          if (tEl) tEl.innerHTML = esc(newWord);
+      } else {
+          render();
+      }
+
+      renderSidebarLists();
+      closeEditModal();
+    }
+  }
+
+  // ===================== 深度解释气泡 (Popover) 悬停触发与渐进式加载逻辑 =====================
+  let explainHideTimer = null;
+  let currentExplainWord = null;
+  let explainCache = {}; // 本地缓存对象，防止重复发请求
+
+  function handleExplainMouseEnter(event, wordStr) {
+      clearTimeout(explainHideTimer);
+      const popover = document.getElementById('explainPopover');
+
+      // 如果悬停的是新单词，重置页面并触发加载
+      if (currentExplainWord !== wordStr) {
+          currentExplainWord = wordStr;
+          document.getElementById('explainWordTitle').innerText = wordStr;
+
+          // 检查缓存，实现秒开
+          if (explainCache[wordStr]) {
+              document.getElementById('explainResultArea').innerHTML = explainCache[wordStr];
+          } else {
+              fetchDeepExplanation(wordStr);
+          }
+      }
+
+      popover.classList.add('show');
+
+      // 智能定位算法
+      const rect = event.target.getBoundingClientRect();
+      let left = rect.left - 440;
+      if (left < 10) left = rect.right + 15;
+
+      // 预估最大高度，防止撑出屏幕底部导致看不全
+      const estimatedMaxHeight = Math.min(700, window.innerHeight * 0.9);
+      let top = rect.top - 20;
+
+      // 如果气泡向下展开会超出屏幕底部，就把它的顶部基准线往上提
+      if (top + estimatedMaxHeight > window.innerHeight - 20) {
+          top = window.innerHeight - estimatedMaxHeight - 20;
+      }
+      // 确保绝对不超出屏幕顶部
+      if (top < 20) top = 20;
+
+      popover.style.left = left + 'px';
+      popover.style.top = top + 'px';
+  }
+
+  function handleExplainMouseLeave() {
+      explainHideTimer = setTimeout(() => {
+          const popover = document.getElementById('explainPopover');
+          popover.classList.remove('show');
+          window.speechSynthesis.cancel(); // 气泡消失时自动停止所有发音
+      }, 300);
+  }
+
+  // ===================== 智能数据路由 (核心抓取控制) =====================
+async function fetchDeepExplanation(word) {
+    const resultArea = document.getElementById('explainResultArea');
+    resultArea.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-dim); line-height: 1.8;">🔍 正在通过 ${currentDictSource === 'google' ? 'Google' : '有道'} 查询...</div>`;
+    updateDictHeaderUI(currentDictSource);
+
+    try {
+        let data;
+
+        if (currentDictSource === 'google') {
+            try {
+                // 1. 主请求：尝试 Google
+                data = await getGoogleRawData(word);
+                if (lastNotifiedState !== 'google_success') {
+                    showDictToast('✅ 科学上网畅通，已使用 Google 查询', 'success');
+                    lastNotifiedState = 'google_success';
+                }
+
+                // 2. 互补机制：如果 Google 查不到例句或音标，静默用有道补全
+                if (data.examples.length === 0 || !data.ukPhonetic || !data.usPhonetic) {
+                    try {
+                        const fallbackData = await getYoudaoRawData(word);
+                        // 补全例句
+                        if (data.examples.length === 0 && fallbackData.examples.length > 0) {
+                            data.examples = fallbackData.examples;
+                            data.source = 'Google 释义 + 有道'; // 组合来源提示
+                        }
+                        // 补全音标
+                        if (!data.ukPhonetic && fallbackData.ukPhonetic) data.ukPhonetic = fallbackData.ukPhonetic;
+                        if (!data.usPhonetic && fallbackData.usPhonetic) data.usPhonetic = fallbackData.usPhonetic;
+                    } catch(e) {} // 补全失败不影响主体显示
+                }
+
+            } catch (e) {
+                console.warn("Google 查询失败，触发降级保护:", e);
+                updateDictHeaderUI('youdao_fallback');
+                if (lastNotifiedState !== 'youdao_fallback') {
+                    showDictToast('⚠️ Google 连接超时，已自动切换为有道', 'error');
+                    lastNotifiedState = 'youdao_fallback';
+                }
+                // 完全降级：使用有道
+                data = await getYoudaoRawData(word);
+            }
+        } else {
+            // 1. 主请求：用户手动选择了有道
+            data = await getYoudaoRawData(word);
+
+            // 2. 互补机制：如果有道查不到例句，尝试用 Google 补全 (限制3秒超时防卡死)
+            if (data.examples.length === 0) {
+                try {
+                    const fallbackData = await getGoogleRawData(word);
+                    if (fallbackData.examples.length > 0) {
+                        data.examples = fallbackData.examples;
+                        data.source = '有道 释义 + Google'; // 组合来源提示
+                    }
+                } catch(e) {}
+            }
+        }
+
+        // 最终渲染统一界面并存入缓存
+        const html = generateUIHtml(data.source, word, data.mainMeaning, data.ukPhonetic, data.usPhonetic, data.meanings, data.examples);
+        resultArea.innerHTML = html;
+        explainCache[word] = html;
+
+    } catch (error) {
+        resultArea.innerHTML = `
+        <div style="color: #e74c3c; padding: 20px 20px 10px; text-align:center;">
+            ❌ 数据抓取失败。<br><span style="font-size:12px;">(${error.message})</span>
+        </div>
+        <div style="margin-top: 5px; padding-top: 15px; border-top: 1px dashed var(--border); text-align: center; padding-bottom: 10px;">
+            <a href="https://cn.bing.com/dict/search?q=${encodeURIComponent(word)}" target="_blank"
+               style="color: var(--text-dim); font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s;"
+               onmouseover="this.style.color='var(--accent)'"
+               onmouseout="this.style.color='var(--text-dim)'">
+               🔗 去必应词典查看完整释义 →
+            </a>
+        </div>`;
+    }
+}
+
+// ===================== 引擎 1：Google 数据抓取器 (返回纯数据) =====================
+async function getGoogleRawData(word) {
+    const fetchWithTimeout = (url) => {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), 3000); // 3秒必须返回，防卡顿
+        return fetch(url, { signal: controller.signal }).then(r => {
+            clearTimeout(id);
+            if (!r.ok) throw new Error("HTTP Error");
+            return r.json();
+        });
+    };
+
+    const [transData, dictData] = await Promise.all([
+        fetchWithTimeout(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&dt=bd&q=${encodeURIComponent(word)}`),
+        fetchWithTimeout(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`).catch(() => null)
+    ]);
+
+    let mainMeaning = transData[0]?.[0]?.[0] || word;
+    let meanings = [];
+    if (transData[1]) {
+        transData[1].forEach(posGroup => meanings.push(`[${posGroup[0]}] ${posGroup[1].join(', ')}`));
+    } else {
+        meanings.push(mainMeaning);
+    }
+
+    let ukPhonetic = '', usPhonetic = '', examples = [];
+    if (dictData && dictData[0]) {
+        if (dictData[0].phonetics) {
+            dictData[0].phonetics.forEach(p => {
+                if (p.audio && p.audio.includes('uk')) ukPhonetic = p.text || ukPhonetic;
+                if (p.audio && p.audio.includes('us')) usPhonetic = p.text || usPhonetic;
+            });
+            if (!ukPhonetic) ukPhonetic = dictData[0].phonetic || '';
+        }
+        dictData[0].meanings.forEach(m => {
+            m.definitions.forEach(d => {
+                // 先把占位符置空
+                if (d.example && examples.length < 3) examples.push({ en: d.example, zh: '' });
+            });
+        });
+    }
+
+    // 💡 核心优化：利用 Promise.all 并发请求，将提取到的纯英文例句瞬间翻译成中文
+    if (examples.length > 0) {
+        try {
+            const transPromises = examples.map(ex =>
+                fetchWithTimeout(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q=${encodeURIComponent(ex.en)}`)
+                    .then(res => res[0]?.map(item => item[0]).join('') || '翻译失败')
+                    .catch(() => '翻译超时')
+            );
+            // 等待所有例句翻译完成
+            const zhTexts = await Promise.all(transPromises);
+            // 组装翻译结果
+            examples.forEach((ex, i) => { ex.zh = zhTexts[i]; });
+        } catch (e) {
+            console.warn('例句翻译失败', e);
+        }
+    }
+
+    return { mainMeaning, ukPhonetic, usPhonetic, meanings, examples, source: 'Google' };
+}
+
+// ===================== 引擎 2：有道 数据抓取器 (返回纯数据) =====================
+async function getYoudaoRawData(word) {
+    const targetUrl = `https://dict.youdao.com/w/eng/${encodeURIComponent(word)}/`;
+    const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`;
+
+    // 给代理请求加上 5 秒超时，防止无限转圈
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 5000);
+
+    const res = await fetch(proxyUrl, { signal: controller.signal }).catch(e => {
+        clearTimeout(id);
+        throw new Error("代理服务器网络繁忙");
+    });
+    clearTimeout(id);
+
+    if (!res || !res.ok) throw new Error("代理服务器网络繁忙");
+    const htmlText = await res.text();
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlText, "text/html");
+
+    let ukPhonetic = '', usPhonetic = '';
+    doc.querySelectorAll('.baav .pronounce').forEach(p => {
+        const text = p.textContent || '';
+        const ph = p.querySelector('.phonetic');
+        if (ph) {
+            if (text.includes('英')) ukPhonetic = ph.textContent.trim();
+            if (text.includes('美')) usPhonetic = ph.textContent.trim();
+        }
+    });
+
+    let meanings = [];
+    const tc = doc.querySelector('.trans-container ul');
+    if (tc) tc.querySelectorAll('li').forEach(li => {
+        const txt = li.textContent.trim();
+        if (txt && meanings.length < 5) meanings.push(txt);
+    });
+
+    let examples = [];
+    const bil = doc.querySelector('#bilingual ul');
+    if (bil) bil.querySelectorAll('li').forEach(li => {
+        const ps = li.querySelectorAll('p');
+        if (ps.length >= 2 && examples.length < 3) {
+            examples.push({ en: ps[0].textContent.replace(/\s+/g, ' ').trim(), zh: ps[1].textContent.replace(/\s+/g, ' ').trim() });
+        }
+    });
+
+    if (meanings.length === 0 && examples.length === 0) throw new Error("未能成功提取到词典内容");
+
+    let mainMeaning = meanings[0].replace(/^[a-zA-Z.]+\s*/, '').replace(/<[^>]+>/g, '').split(/[;；]/)[0].trim();
+    if (!mainMeaning) mainMeaning = word;
+
+    return { mainMeaning, ukPhonetic, usPhonetic, meanings, examples, source: '有道' };
+}
+
+// ===================== 统一 UI 渲染器 =====================
+  function generateUIHtml(sourceName, word, mainMeaning, ukPhonetic, usPhonetic, meanings, examples) {
+      let html = `<div class="explain-content">`;
+      if (meanings.length > 0) {
+          html += `<div style="margin-bottom: 14px; font-size: 15px;">核心释义：<strong style="color:var(--accent); font-size: 17px;">${mainMeaning}</strong></div>`;
+          html += `<ul style="background: var(--surface-hover); padding: 14px 14px 14px 34px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px;">`;
+          html += `<li style="margin-bottom: 6px;"><strong>音标</strong>：英 <span style="font-family:'JetBrains Mono',monospace; color:var(--text-dim)">${ukPhonetic||'无'}</span>，美 <span style="font-family:'JetBrains Mono',monospace; color:var(--text-dim)">${usPhonetic||'无'}</span></li>`;
+          meanings.forEach(m => {
+              let formattedM = m.replace(/;/g, '；').split('；').join('<span style="color:var(--border);"> | </span>');
+              html += `<li style="margin-bottom: 6px; line-height: 1.5;">${formattedM}</li>`;
+          });
+          html += `</ul>`;
+      }
+
+      if (examples.length > 0) {
+          html += `<div style="margin-bottom: 12px; font-size: 15px;"><strong>📖 ${sourceName} 权威例句：</strong></div><div class="ex-list" style="margin-bottom: 20px;">`;
+          examples.forEach((item, idx) => {
+              html += `
+              <div class="ex-item" style="padding: 12px 14px; margin-bottom: 0;">
+                <div class="ex-text-area">
+                  <div class="ex-en" style="font-size: 16px; margin-bottom: 4px;">${idx+1}. ${highlightWord(item.en, word)}</div>
+                  <div class="ex-zh" style="font-size: 12.5px;">（${item.zh}）</div>
+                </div>
+                <button class="ex-play-btn" style="width: 32px; height: 32px;" data-text="${encodeURIComponent(item.en)}" onclick="speakEx(this)" title="朗读例句">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>
+                </button>
+              </div>`;
+          });
+          html += `</div>`;
+      }
+
+      // 💡 新增：底部的必应词典跳转外链
+      html += `
+      <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); text-align: center;">
+          <a href="https://cn.bing.com/dict/search?q=${encodeURIComponent(word)}" target="_blank"
+             style="color: var(--text-dim); font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s;"
+             onmouseover="this.style.color='var(--accent)'"
+             onmouseout="this.style.color='var(--text-dim)'">
+             🔗 在必应词典查看完整释义 →
+          </a>
+      </div>`;
+
+      html += `</div>`;
+      return html;
+  }
+
+  // ===================== 语音引擎加载与精细分组管理 =====================
+  function changeVoice() {
+    localStorage.setItem('vocab-voice', document.getElementById('voiceSelect').value);
+  }
+
+  function changeRepeat() {
+    localStorage.setItem('vocab-repeat', document.getElementById('repeatSelect').value);
+  }
+
+  function loadSystemVoices() {
+    if (!('speechSynthesis' in window)) return;
+    const voices = window.speechSynthesis.getVoices();
+    const select = document.getElementById('voiceSelect');
+    const currentVal = select.value;
+
+    select.innerHTML = '';
+
+    const optGroupOnline = document.createElement('optgroup');
+    optGroupOnline.label = '☁️ 在线云端语音 (免翻墙/全平台)';
+    const onlineOptions = [
+      {v: 'default', t: '系统默认语音'},
+      {v: 'youdao_us', t: '有道词典 (美音)'},
+      {v: 'youdao_uk', t: '有道词典 (英音)'},
+      {v: 'baidu_en', t: '百度翻译 (美音)'},
+      {v: 'google_us', t: '谷歌翻译 (美音)'},
+      {v: 'google_uk', t: '谷歌翻译 (英音)'}
+    ];
+    onlineOptions.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.v; opt.textContent = o.t;
+      optGroupOnline.appendChild(opt);
+    });
+    select.appendChild(optGroupOnline);
+
+    const localVoices = voices.filter(v => v.lang.startsWith('en') || v.lang.startsWith('zh'));
+
+    const msVoices = localVoices.filter(v => v.name.includes('Microsoft') || v.name.includes('Edge'));
+    if (msVoices.length > 0) {
+      const optGroupMs = document.createElement('optgroup');
+      optGroupMs.label = '🔵 微软专属引擎 (推荐 Edge 浏览器)';
+      msVoices.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.name;
+        let shortName = v.name.replace('Microsoft ', '').replace(' Online (Natural)', ' (Azure 神经网络)').replace(' (Natural)', ' (神经网络)');
+        opt.textContent = `${shortName} (${v.lang})`;
+        optGroupMs.appendChild(opt);
+      });
+      select.appendChild(optGroupMs);
+    }
+
+    const appleVoices = localVoices.filter(v => !msVoices.includes(v) && (v.name.includes('Apple') || v.name.includes('Siri') || (v.voiceURI && v.voiceURI.includes('Apple'))));
+    if (appleVoices.length > 0) {
+      const optGroupApple = document.createElement('optgroup');
+      optGroupApple.label = '🍎 苹果专属引擎 (Mac/iOS)';
+      appleVoices.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.name;
+        opt.textContent = `${v.name} (${v.lang})`;
+        optGroupApple.appendChild(opt);
+      });
+      select.appendChild(optGroupApple);
+    }
+
+    const otherVoices = localVoices.filter(v => !msVoices.includes(v) && !appleVoices.includes(v));
+    if (otherVoices.length > 0) {
+      const optGroupOther = document.createElement('optgroup');
+      optGroupOther.label = '💻 其他本地引擎';
+      otherVoices.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.name;
+        opt.textContent = `${v.name} (${v.lang})`;
+        optGroupOther.appendChild(opt);
+      });
+      select.appendChild(optGroupOther);
+    }
+
+    const savedVoice = localStorage.getItem('vocab-voice');
+    if (savedVoice && select.querySelector(`option[value="${CSS.escape(savedVoice)}"]`)) {
+      select.value = savedVoice;
+    } else if (select.querySelector(`option[value="${CSS.escape(currentVal)}"]`)) {
+      select.value = currentVal;
+    } else {
+      select.value = 'default';
+    }
+  }
+
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = loadSystemVoices;
+    setTimeout(loadSystemVoices, 100);
+  }
+
+  function getOnlineAudioUrl(text, voiceType) {
+    const encodedText = encodeURIComponent(text);
+    switch(voiceType) {
+      case 'youdao_us': return `https://dict.youdao.com/dictvoice?audio=${encodedText}&type=2`;
+      case 'youdao_uk': return `https://dict.youdao.com/dictvoice?audio=${encodedText}&type=1`;
+      case 'baidu_en':  return `https://tts.baidu.com/text2audio?lan=en&ie=UTF-8&spd=5&text=${encodedText}`;
+      case 'google_us': return `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en-US&q=${encodedText}`;
+      case 'google_uk': return `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en-GB&q=${encodedText}`;
+      default: return null;
+    }
+  }
+
+  // 核心 Promise 播放器：播放一次音频
+  function playAudioOnce(text, voiceType, rate) {
+    return new Promise((resolve) => {
+      const url = getOnlineAudioUrl(text, voiceType);
+      if (url) {
+        const audio = new Audio(url);
+        audio.playbackRate = rate;
+        audio.onended = resolve;
+        audio.onerror = () => { fallbackLocalSpeak(text, rate, voiceType, resolve); };
+        audio.play().catch(() => { fallbackLocalSpeak(text, rate, voiceType, resolve); });
+      } else {
+        fallbackLocalSpeak(text, rate, voiceType, resolve);
+      }
+    });
+  }
+
+  function fallbackLocalSpeak(text, rate, voiceType, endCb) {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    u.rate = rate;
+    if (voiceType && voiceType !== 'default') {
+      const voices = window.speechSynthesis.getVoices();
+      const selectedVoice = voices.find(v => v.name === voiceType);
+      if (selectedVoice) u.voice = selectedVoice;
+    }
+    u.onend = u.onerror = endCb;
+    window.speechSynthesis.speak(u);
+  }
+
+  // ===================== 循环播放逻辑 =====================
+
+  async function speak(text) {
+    const voiceType = document.getElementById('voiceSelect').value;
+    const rate = parseFloat(document.getElementById('speedSelect').value);
+    const repeatCount = parseInt(document.getElementById('repeatSelect').value) || 1;
+
+    const els = document.querySelectorAll(`[data-word="${CSS.escape(text)}"]:not(.stubborn-btn):not(.explain-btn)`);
+
+    const startAnim = () => els.forEach(b => b.classList.add('playing'));
+    const endAnim = () => els.forEach(b => b.classList.remove('playing'));
+
+    startAnim();
+
+    for (let i = 0; i < repeatCount; i++) {
+        await playAudioOnce(text, voiceType, rate);
+        // 如果不是最后一遍，稍微停顿一下再重复
+        if (i < repeatCount - 1) {
+            await new Promise(r => setTimeout(r, 400));
+        }
+    }
+
+    endAnim();
+  }
+
+  async function speakEx(btnElement) {
+    const encodedText = btnElement.getAttribute('data-text');
+    if (!encodedText) return;
+    const text = decodeURIComponent(encodedText);
+
+    const voiceType = document.getElementById('voiceSelect').value;
+    const rate = parseFloat(document.getElementById('speedSelect').value);
+
+    const endAnim = () => btnElement.classList.remove('playing');
+    btnElement.classList.add('playing');
+
+    await playAudioOnce(text, voiceType, rate);
+    endAnim();
+  }
+
+  async function playAll() {
+    if (playingAll) { playingAll = false; window.speechSynthesis.cancel(); document.getElementById('playAllBtn').textContent = '▶ 播放本页'; return; }
+    playingAll = true;
+    document.getElementById('playAllBtn').textContent = '⏹ 停止播放';
+    const s = (curPage - 1) * PER_PAGE, e = Math.min(s + PER_PAGE, allWords.length);
+
+    let sequence = [];
+    if (isShuffled && shuffledIndices.length === (e - s)) {
+        sequence = shuffledIndices.map(idx => s + idx);
+    } else {
+        for (let i = s; i < e; i++) sequence.push(i);
+    }
+
+    const repeatCount = parseInt(document.getElementById('repeatSelect').value) || 1;
+
+    for (let i = 0; i < sequence.length; i++) {
+      if (!playingAll) break;
+      const globalIdx = sequence[i];
+      const text = allWords[globalIdx].word;
+      const voiceType = document.getElementById('voiceSelect').value;
+      const rate = parseFloat(document.getElementById('speedSelect').value);
+
+      const els = document.querySelectorAll(`.speak-btn[data-word="${CSS.escape(text)}"]:not(.hover-action-btn)`);
+      const startAnim = () => els.forEach(b => b.classList.add('playing'));
+      const endAnim = () => els.forEach(b => b.classList.remove('playing'));
+
+      startAnim();
+
+      for (let r = 0; r < repeatCount; r++) {
+          if (!playingAll) break;
+          await playAudioOnce(text, voiceType, rate);
+          if (r < repeatCount - 1 && playingAll) {
+              await new Promise(res => setTimeout(res, 400));
+          }
+      }
+
+      endAnim();
+      if (playingAll) await new Promise(res => setTimeout(res, 800)); // 单词与单词之间的间隔
+    }
+    playingAll = false; document.getElementById('playAllBtn').textContent = '▶ 播放本页';
+  }
+
+// ===================== 自定义清除数据逻辑 =====================
+  function openClearModal() {
+    // 每次打开默认取消全部勾选，防止手滑误删
+    document.getElementById('clearWords').checked = false;
+    document.getElementById('clearStubborn').checked = false;
+    document.getElementById('clearProgress').checked = false;
+    document.getElementById('clearSettings').checked = false;
+    document.getElementById('clearModalOverlay').classList.add('show');
+  }
+
+  function closeClearModal() {
+    document.getElementById('clearModalOverlay').classList.remove('show');
+  }
+
+// ===================== 清除数据 Tab =====================
+  function renderClearTab() {
+    return `<div class="import-section" style="text-align: center; padding: 20px;">
+      <div style="font-size: 40px; margin-bottom: 10px; opacity: 0.8;">🗑️</div>
+      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.6;">
+        请勾选您需要<span style="color:#e74c3c;font-weight:600;">永久清除</span>的数据项：<br>
+        <span style="font-size: 12px;">(注意：此操作不可逆转，建议清除前先在“数据管理”中备份)</span>
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; align-items: flex-start; max-width: 320px; margin: 0 auto 24px; text-align: left;">
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+          <input type="checkbox" id="clearWords" style="width: 16px; height: 16px;">
+          <span style="font-size: 14px; color: var(--text);">当前词库 (清空后需重新导入)</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+          <input type="checkbox" id="clearStubborn" style="width: 16px; height: 16px;">
+          <span style="font-size: 14px; color: var(--text);">⭐ 顽固单词 (清空收藏列表)</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+          <input type="checkbox" id="clearProgress" style="width: 16px; height: 16px;">
+          <span style="font-size: 14px; color: var(--text);">📈 学习进度 (清空热力图和翻页记录)</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+          <input type="checkbox" id="clearSettings" style="width: 16px; height: 16px;">
+          <span style="font-size: 14px; color: var(--text);">⚙️ 页面设置 (恢复默认字号、主题、发音等)</span>
+        </label>
+      </div>
+
+      <button class="btn btn-primary" style="padding: 10px 32px; font-size: 14px; background: #e74c3c; border-color: #e74c3c;" onclick="executeClear()">🚨 确认清除</button>
+    </div>`;
+  }
+
+  // ===================== 学习计划管理 (多环境隔离) =====================
+  function renderPlanTab() {
+    let html = `<div style="padding: 10px 20px 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <p style="font-size:13px; color:var(--text-dim); line-height:1.5;">您可以在不同的学习计划间无缝切换。<br>每个计划拥有<b>独立</b>的词库、顽固单词和进度记录。</p>
+            <button class="btn btn-primary" onclick="createNewPlan()">+ 新建计划</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">`;
+
+    for(let id in plans) {
+        const p = plans[id];
+        const isActive = id === currentPlanId;
+        const wordCount = (p.allWords || []).length;
+        const stubCount = Object.keys(p.stubbornDict || {}).length;
+
+        html += `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:var(--surface-hover); border:2px solid ${isActive ? 'var(--accent)' : 'transparent'}; border-radius:12px; transition:all .2s;">
+            <div>
+                <div style="font-size:16px; font-weight:600; color:var(--text); margin-bottom:6px; display:flex; align-items:center; gap:8px;">
+                    ${escapeHtml(p.name)}
+                    ${isActive ? `<span style="font-size:11px; padding:2px 8px; background:var(--accent-glow); color:var(--accent); border-radius:6px;">当前使用中</span>` : ''}
+                </div>
+                <div style="font-size:12px; color:var(--text-dim);">包含 ${wordCount} 个单词 · ⭐ 顽固单词 ${stubCount} 个</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                ${!isActive ? `<button class="btn" style="border-color:var(--accent); color:var(--accent);" onclick="switchPlan('${id}')">切换至此计划</button>` : ''}
+                <button class="btn" onclick="renamePlan('${id}')">重命名</button>
+                ${Object.keys(plans).length > 1 && !isActive ? `<button class="btn" style="color:#e74c3c;" onclick="deletePlan('${id}')">删除</button>` : ''}
+            </div>
+        </div>`;
+    }
+    html += `</div></div>`;
+    return html;
+  }
+
+  function createNewPlan() {
+  if (!isPremium) { showPremiumModal(); return; }
+      const name = prompt("请输入新学习计划的名称 (例如: 考研核心词汇)：", "新学习计划");
+      if(name && name.trim()) {
+          const id = 'plan_' + Date.now();
+          plans[id] = { name: name.trim(), allWords: [], stubbornDict: {}, learningProgress: [], activeBank: '', curPage: 1 };
+          saveState();
+          // 💡 修复：使用更安全的 DOM 选择方式
+          switchTab('plan', document.querySelectorAll('.modal-tab')[0]);
+          showDictToast("✅ 新计划创建成功", "success");
+      }
+  }
+
+  function renamePlan(id) {
+  if (!isPremium) { showPremiumModal(); return; }
+      const oldName = plans[id].name;
+      const name = prompt("重命名学习计划：", oldName);
+      if(name && name.trim() && name.trim() !== oldName) {
+          plans[id].name = name.trim();
+          saveState();
+          if(id === currentPlanId) applyPlanState(); // 更新头部标题
+          // 💡 修复：使用更安全的 DOM 选择方式
+          switchTab('plan', document.querySelectorAll('.modal-tab')[0]);
+          showDictToast("✅ 重命名成功", "success");
+      }
+  }
+
+  async function deletePlan(id) { // 💡 注意这里加了 async
+  if (!isPremium) { showPremiumModal(); return; }
+      if(id === currentPlanId) return alert("不能删除正在使用的计划！请先切换到其他计划。");
+
+      // 💡 替换为自定义弹窗
+      const confirmed = await customConfirm(`⚠️ 确定要删除计划 "${plans[id].name}" 吗？\n此操作不可恢复，对应词库和进度将被清空！`);
+      if(confirmed) {
+          delete plans[id];
+          saveState();
+          switchTab('plan', document.querySelectorAll('.modal-tab')[0]);
+          showDictToast("✅ 计划已永久删除", "success");
+      }
+  } // 💡💡💡 就是这里！补上这个闭合的大括号！
+
+  function switchPlan(id) {
+  if (!isPremium) { showPremiumModal(); return; }
+      // 切换前，先将当前内存里的数据保存到旧计划中
+      if(plans[currentPlanId]) {
+          plans[currentPlanId].allWords = allWords;
+          plans[currentPlanId].stubbornDict = stubbornDict;
+          plans[currentPlanId].learningProgress = learningProgress;
+          plans[currentPlanId].activeBank = activeBank;
+          plans[currentPlanId].curPage = curPage;
+      }
+      currentPlanId = id; // 变更当前 ID
+      applyPlanState();   // 加载新计划数据到内存
+      saveState();        // 持久化当前状态
+      render();           // 重新渲染主界面
+      closeModal();       // 切换成功后自动关闭弹窗体验更好
+      showDictToast(`🔄 已切换至计划: ${plans[id].name}`, "success");
+  }
+
+async function executeClear() { // 💡 注意这里加了 async
+    const cWords = document.getElementById('clearWords').checked;
+    const cStubborn = document.getElementById('clearStubborn').checked;
+    const cProgress = document.getElementById('clearProgress').checked;
+    const cSettings = document.getElementById('clearSettings').checked;
+
+    if (!cWords && !cStubborn && !cProgress && !cSettings) {
+        showDictToast("⚠️ 请至少勾选一项要清除的数据！", "error");
+        return;
+    }
+
+    // 💡 替换为自定义弹窗
+    const confirmed = await customConfirm("⚠️ 警告：确定要永久清除选中的数据吗？此操作不可恢复！");
+    if (!confirmed) return;
+
+    clearTimeout(saveStateTimer);
+    // ... 下面的清除逻辑保持不变 ...
+
+    // 确保当前计划对象存在
+    if (!plans[currentPlanId]) plans[currentPlanId] = { name: "默认计划" };
+
+    // 💡 核心修复 2：同步清理内存变量 + 计划字典中的对应分支
+    if (cWords) {
+        allWords = [];
+        activeBank = '';
+        plans[currentPlanId].allWords = [];
+        plans[currentPlanId].activeBank = '';
+        const activeLabel = document.getElementById('activeBankLabel');
+        if(activeLabel) activeLabel.innerHTML = '';
+        resetShuffle();
+    }
+
+    if (cStubborn) {
+        stubbornDict = {};
+        plans[currentPlanId].stubbornDict = {};
+    }
+
+    if (cProgress) {
+        learningProgress = [];
+        curPage = 1;
+        plans[currentPlanId].learningProgress = [];
+        plans[currentPlanId].curPage = 1;
+    }
+
+    let reloadNeeded = false;
+    if (cSettings) {
+        const keysToRemove = [
+            'vocab-theme', 'vocab-size', 'vocab-font', 'vocab-gap',
+            'vocab-cols', 'vocab-rows', 'vocab-phonetic',
+            'vocab-meaning', 'vocab-repeat', 'vocab-voice', 'vocab-study-mode'
+        ];
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        reloadNeeded = true;
+    }
+
+    // 重置发音
+    window.speechSynthesis.cancel();
+    playingAll = false;
+    const playBtn = document.getElementById('playAllBtn');
+    if(playBtn) playBtn.textContent = '▶ 播放本页';
+
+    // 💡 核心修复 3：强制立即持久化（不使用延时定时器）
+    try {
+        localStorage.setItem('vocab-plans', JSON.stringify(plans));
+        localStorage.setItem('vocab-current-plan-id', currentPlanId);
+    } catch (e) { console.error("清除后保存失败", e); }
+
+    render();
+    closeModal();
+
+    if(reloadNeeded) {
+        sessionStorage.setItem('vocab_pending_toast', "✅ 页面设置已清除，已恢复默认状态");
+        location.reload();
+    } else {
+        showDictToast("✅ 选中数据已成功清除", "success");
+    }
+  } // 💡 就是少了这个大括号！补上它！
+  // ===================== UI INIT & CONTROLS =====================
+  function toggleTheme() {
+    const body = document.body;
+    const isDark = body.getAttribute('data-theme') === 'dark';
+    body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('themeBtn').textContent = isDark ? '🌙' : '☀️';
+    localStorage.setItem('vocab-theme', isDark ? 'light' : 'dark');
+  }
+
+  function toggleStudyMode() {
+    currentStudyMode = currentStudyMode === 'learn' ? 'review' : 'learn';
+    applyStudyMode();
+    localStorage.setItem('vocab-study-mode', currentStudyMode);
+  }
+
+  function applyStudyMode() {
+    const btn = document.getElementById('modeBtn');
+    if (currentStudyMode === 'review') {
+      btn.innerHTML = '🧠 复习模式';
+      btn.className = 'btn mode-btn-review';
+      document.body.setAttribute('data-study-mode', 'review');
+    } else {
+      btn.innerHTML = '📖 学习模式';
+      btn.className = 'btn';
+      document.body.setAttribute('data-study-mode', 'learn');
+    }
+  }
+
+  // ===================== 乱序功能 =====================
+  function toggleShuffle() {
+    const s = (curPage - 1) * PER_PAGE;
+    const e = Math.min(s + PER_PAGE, allWords.length);
+    const pageLen = e - s;
+
+    if (pageLen <= 1) return; // 单词少于2个没必要乱序
+
+    isShuffled = !isShuffled;
+    const btn = document.getElementById('shuffleBtn');
+
+    if (isShuffled) {
+      btn.innerHTML = '🔄 恢复顺序';
+      btn.classList.add('btn-primary');
+
+      // 生成并打乱当前页的索引
+      shuffledIndices = Array.from({length: pageLen}, (_, i) => i);
+      for (let i = shuffledIndices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledIndices[i], shuffledIndices[j]] = [shuffledIndices[j], shuffledIndices[i]];
+      }
+    } else {
+      btn.innerHTML = '🔀 暂时乱序';
+      btn.classList.remove('btn-primary');
+      shuffledIndices = [];
+    }
+
+    // 重新渲染当前页卡片
+    renderPage();
+  }
+
+  function resetShuffle() {
+      if (isShuffled) {
+          isShuffled = false;
+          shuffledIndices = [];
+          const btn = document.getElementById('shuffleBtn');
+          if (btn) {
+              btn.innerHTML = '🔀 暂时乱序';
+              btn.classList.remove('btn-primary');
+          }
+      }
+  }
+
+  function changeSize() {
+    const size = document.getElementById('sizeSelect').value;
+    document.body.setAttribute('data-size', size);
+    localStorage.setItem('vocab-size', size);
+  }
+
+  function changeFont() {
+    const font = document.getElementById('fontSelect').value;
+    document.body.setAttribute('data-font', font);
+    localStorage.setItem('vocab-font', font);
+  }
+
+  function changeGap() {
+    const gap = document.getElementById('gapSelect').value;
+    document.body.setAttribute('data-gap', gap);
+    localStorage.setItem('vocab-gap', gap);
+  }
+
+  function changeDisplay(type) {
+    const val = document.getElementById(type + 'Select').value;
+    document.body.setAttribute('data-' + type, val);
+    localStorage.setItem('vocab-' + type, val);
+  }
+
+  function changeLayout() {
+    const cols = document.getElementById('colSelect').value;
+    const rows = document.getElementById('rowSelect').value;
+    localStorage.setItem('vocab-cols', cols);
+    localStorage.setItem('vocab-rows', rows);
+    applyLayout(cols, rows);
+  }
+
+  function applyLayout(cols, rows) {
+    const grid = document.getElementById('wordGrid');
+    if(grid) { grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`; }
+    PER_PAGE = parseInt(cols) * parseInt(rows);
+
+    const totalPages = Math.ceil(allWords.length / PER_PAGE) || 1;
+    if (curPage > totalPages) curPage = totalPages;
+    resetShuffle(); // 布局改变重置乱序
+    if (allWords.length > 0) render();
+  }
+
+  function generateOptions(elId, prefix, maxLevel, suffix = "") {
+    const select = document.getElementById(elId);
+    let html = '';
+    for(let i = 1; i <= maxLevel; i++) {
+      html += `<option value="${i}">${prefix} ${i}${suffix}</option>`;
+    }
+    select.innerHTML = html;
+  }
+
+  let saveStateTimer = null;
+  // ===================== 核心状态管理 (重构版) =====================
+  function saveState() {
+  // 💡 关键：如果是复习模式，禁止自动保存数据，防止覆盖掉真实的词库进度
+    if (isReviewMode) return;
+    clearTimeout(saveStateTimer);
+    saveStateTimer = setTimeout(() => {
+      try {
+        if(!plans[currentPlanId]) plans[currentPlanId] = { name: '默认计划' };
+
+        // 将当前内存里的数据打包存入对应的计划篮子里
+        plans[currentPlanId].allWords = allWords;
+        plans[currentPlanId].stubbornDict = stubbornDict;
+        plans[currentPlanId].learningProgress = learningProgress;
+        plans[currentPlanId].activeBank = activeBank;
+        plans[currentPlanId].curPage = curPage;
+
+        localStorage.setItem('vocab-plans', JSON.stringify(plans));
+        localStorage.setItem('vocab-current-plan-id', currentPlanId);
+      } catch (e) {
+        console.warn('无法保存状态到本地', e);
+      }
+    }, 500);
+  }
+
+  // ===================== 批量复习模式逻辑 =====================
+  function toggleBatchReview() {
+    const btn = document.getElementById('batchReviewBtn');
+    const stubWords = Object.values(stubbornDict);
+
+    if (!isReviewMode) {
+      // --- 进入复习模式 ---
+      if (stubWords.length === 0) {
+        showDictToast("⚠️ 顽固单词列表为空，无法复习", "error");
+        return;
+      }
+
+      // 1. 备份当前状态
+      originalState = {
+        allWords: [...allWords],
+        activeBank: activeBank,
+        curPage: curPage
+      };
+
+      // 2. 注入顽固单词数据
+      allWords = stubWords.map(w => ({...w})); // 深拷贝防止误伤
+      activeBank = 'batch_review_temp'; // 临时标记
+      curPage = 1;
+      isReviewMode = true;
+
+      // 3. 更新 UI
+      btn.innerHTML = "🚪 退出复习";
+      btn.style.background = "#e74c3c";
+      btn.style.color = "#fff";
+      btn.style.borderColor = "#e74c3c";
+
+      const activeLabel = document.getElementById('activeBankLabel');
+      if(activeLabel) activeLabel.innerHTML = `<span class="active-bank" style="background:#e74c3c; color:#fff;">🔥 顽固单词集中复习</span>`;
+
+      showDictToast("🧘 已进入顽固单词集中复习模式", "success");
+    } else {
+      // --- 退出复习模式 ---
+      exitReviewMode();
+    }
+
+    resetShuffle();
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function exitReviewMode() {
+    if (!isReviewMode) return;
+    const btn = document.getElementById('batchReviewBtn');
+
+    // 1. 还原备份的状态
+    allWords = originalState.allWords;
+    activeBank = originalState.activeBank;
+    curPage = originalState.curPage;
+    isReviewMode = false;
+    originalState = null;
+
+    // 2. 还原 UI
+    btn.innerHTML = "🧠 批量复习";
+    btn.style.background = "var(--accent-glow)";
+    btn.style.color = "var(--accent)";
+    btn.style.borderColor = "var(--accent)";
+
+    // 重新根据还原后的 activeBank 渲染标签
+    applyPlanState();
+
+    showDictToast("🔄 已恢复原始词库进度", "success");
+  }
+
+  function loadState() {
+    try {
+      let savedPlans = localStorage.getItem('vocab-plans');
+
+      if (savedPlans) {
+          plans = JSON.parse(savedPlans);
+      } else {
+          // 💡 自动迁移旧版本数据，确保用户更新代码后数据不丢失
+          const oldWords = JSON.parse(localStorage.getItem('vocab-all-words')) || [];
+          const oldStubborn = JSON.parse(localStorage.getItem('vocab-stubborn-dict')) || {};
+          const oldProgress = JSON.parse(localStorage.getItem('vocab-learning-progress')) || [];
+          const oldBank = localStorage.getItem('vocab-active-bank') || '';
+          const oldPage = parseInt(localStorage.getItem('vocab-cur-page')) || 1;
+
+          plans['default'] = {
+              name: '日常学习计划', // 给旧数据起个好听的名字
+              allWords: oldWords, stubbornDict: oldStubborn, learningProgress: oldProgress, activeBank: oldBank, curPage: oldPage
+          };
+      }
+
+      currentPlanId = localStorage.getItem('vocab-current-plan-id') || 'default';
+      if (!plans[currentPlanId]) currentPlanId = Object.keys(plans)[0] || 'default';
+
+      applyPlanState();
+    } catch (e) { console.warn('读取本地状态失败', e); }
+    render();
+  }
+
+  // 将当前选中的计划数据解包到全局变量中供页面使用
+function applyPlanState() {
+    const p = plans[currentPlanId];
+    if (!p) return;
+
+    // ... 保持原有的数据赋值逻辑 (allWords = ..., curPage = ...) ...
+    allWords = p.allWords || [];
+    stubbornDict = p.stubbornDict || {};
+    learningProgress = p.learningProgress || [];
+    activeBank = p.activeBank || '';
+    curPage = p.curPage || 1;
+
+    // 1. 恢复大标题简洁性
+    const titleEl = document.querySelector('.app-title');
+    if(titleEl) titleEl.innerText = "VOCAB LAB · 单词记忆宫殿";
+
+    // 2. 💡 将计划名称注入到 stats-area 中的新容器
+    const indicator = document.getElementById('planIndicator');
+    if(indicator) {
+        indicator.innerHTML = `
+          <div class="plan-tag">
+            <span style="font-size:10px;">📅</span>
+            ${escapeHtml(p.name)}
+          </div>`;
+    }
+
+    // 3. 处理词库标签显示逻辑
+    const bankLabel = document.getElementById('activeBankLabel');
+    if (bankLabel) {
+        if (activeBank && allWords.length > 0) {
+            bankLabel.innerHTML = `<span class="active-bank">${escapeHtml(activeBank)}</span>`;
+        } else {
+            bankLabel.innerHTML = '';
+        }
+    }
+
+      // 还原底部信息栏的词库标记
+      if (allWords.length > 0) {
+        let labelText = '自定义词库';
+        if (activeBank && activeBank.includes('_')) {
+          const [prefix, key] = activeBank.split('_');
+          const bank = prefix === 'exam' ? EXAM_BANKS[key] : null;
+          if (bank) labelText = `${bank.emoji} ${bank.name}`;
+        }
+        const activeLabel = document.getElementById('activeBankLabel');
+        if(activeLabel) activeLabel.innerHTML = `<span class="active-bank">${labelText}</span>`;
+      } else {
+         const activeLabel = document.getElementById('activeBankLabel');
+         if(activeLabel) activeLabel.innerHTML = '';
+      }
+  }
+
+  window.addEventListener('beforeunload', () => {
+    if(saveStateTimer) {
+      clearTimeout(saveStateTimer);
+      try {
+        localStorage.setItem('vocab-all-words', JSON.stringify(allWords));
+        localStorage.setItem('vocab-active-bank', activeBank);
+        localStorage.setItem('vocab-cur-page', curPage);
+        localStorage.setItem('vocab-stubborn-dict', JSON.stringify(stubbornDict));
+        localStorage.setItem('vocab-learning-progress', JSON.stringify(learningProgress));
+      } catch(e) {}
+    }
+  });
+
+  (function initSettings() {
+    generateOptions('colSelect', '', 20, ' 列');
+    generateOptions('rowSelect', '', 20, ' 行');
+    generateOptions('fontSelect', '字号', 10, ' 级');
+    generateOptions('sizeSelect', '卡片', 5, ' 级');
+    generateOptions('gapSelect', '间距', 5, ' 级');
+
+    const savedTheme = localStorage.getItem('vocab-theme');
+    if (savedTheme === 'dark') {
+      document.body.setAttribute('data-theme', 'dark');
+      setTimeout(() => { document.getElementById('themeBtn').textContent = '☀️'; }, 0);
+    }
+
+    const savedSize = localStorage.getItem('vocab-size') || '3';
+    document.body.setAttribute('data-size', savedSize);
+    document.getElementById('sizeSelect').value = savedSize;
+
+    const savedFont = localStorage.getItem('vocab-font') || '4';
+    document.body.setAttribute('data-font', savedFont);
+    document.getElementById('fontSelect').value = savedFont;
+
+    const savedGap = localStorage.getItem('vocab-gap') || '3';
+    document.body.setAttribute('data-gap', savedGap);
+    document.getElementById('gapSelect').value = savedGap;
+
+    const savedPhonetic = localStorage.getItem('vocab-phonetic') || 'show';
+    document.body.setAttribute('data-phonetic', savedPhonetic);
+    document.getElementById('phoneticSelect').value = savedPhonetic;
+
+    const savedMeaning = localStorage.getItem('vocab-meaning') || 'show';
+    document.body.setAttribute('data-meaning', savedMeaning);
+    document.getElementById('meaningSelect').value = savedMeaning;
+
+    const savedRepeat = localStorage.getItem('vocab-repeat') || '1';
+    document.getElementById('repeatSelect').value = savedRepeat;
+
+    currentStudyMode = localStorage.getItem('vocab-study-mode') || 'learn';
+    applyStudyMode();
+
+    const savedCols = localStorage.getItem('vocab-cols') || '4';
+    const savedRows = localStorage.getItem('vocab-rows') || '5';
+    document.getElementById('colSelect').value = savedCols;
+    document.getElementById('rowSelect').value = savedRows;
+
+    setTimeout(() => applyLayout(savedCols, savedRows), 0);
+  })();
+
+  // ===================== 键盘导航 =====================
+  document.addEventListener('keydown', function(event) {
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+    // 💡 放在这里才是正确的！专门监听键盘 Esc 键
+    if (event.key === 'Escape' && document.body.getAttribute('data-zen-mode') === 'on') {
+        exitZenMode();
+    }
+
+    const m1 = document.getElementById('modalOverlay');
+    const m2 = document.getElementById('testModalOverlay');
+    const m3 = document.getElementById('editModalOverlay');
+    const m4 = document.getElementById('authorModalOverlay');
+
+    if ((m1 && m1.classList.contains('show')) ||
+        (m2 && m2.classList.contains('show')) ||
+        (m3 && m3.classList.contains('show')) ||
+        (m4 && m4.classList.contains('show'))) {
+      return;
+    }
+
+    const totalPages = Math.ceil(allWords.length / PER_PAGE) || 1;
+    if (event.key === 'ArrowLeft') {
+      if (curPage > 1) goPage(curPage - 1);
+    } else if (event.key === 'ArrowRight') {
+      if (curPage < totalPages) goPage(curPage + 1);
+    }
+  });
+
+
+  // ===================== WORD BANKS DATA =====================
+
+  const EXAM_BANKS = {
+
+
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 词库开始 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 词库开始 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+  cet4: {
+    name: "牛津高频词汇", emoji: "🏛",
+    words: [
+
+{"w":"asunder","p":"/əˈsʌndər/","m":["分离地"]},
+{"w":"douse","p":"/daʊs/","m":["熄灭"]},
+{"w":"glossy","p":"/ˈɡlɑsi/","m":["平滑的，有光泽的"]},
+{"w":"rational","p":"/ˈræʃnəl/","m":["理性的"]},
+{"w":"edible","p":"/ˈɛdəbl/","m":["可食用的"]},
+{"w":"obsolete","p":"/ˌɑbsəˈlit/","m":["过时的，被淘汰的"]},
+{"w":"motivate","p":"/ˈmotəˈvet/","m":["刺激，激发"]},
+{"w":"sterling","p":"/ˈstɝlɪŋ/","m":["优秀的"]},
+{"w":"ineluctable","p":"/ˌɪnɪˈlʌktəbl/","m":["无法逃避的，必然的"]},
+{"w":"banish","p":"/ˈbænɪʃ/","m":["驱逐出境"]},
+{"w":"dyspeptic","p":"/dɪsˈpeptɪk/","m":["脾气坏的"]},
+{"w":"opine","p":"/oʊˈpaɪn/","m":["表达观点", "想，认为"]},
+{"w":"penitent","p":"/ˈpɛnətənt/","m":["悔过的"]},
+{"w":"retouch","p":"/ˌriːˈtʌtʃ/","m":["润饰，改进"]},
+{"w":"veracious","p":"/vəˈreɪʃəs/","m":["诚实的，说实话的"]},
+{"w":"guardian","p":"/ˈɡɑrdɪən/","m":["保护者，捍卫者"]},
+{"w":"cluster","p":"/ˈklʌstɚ/","m":["一群人"]},
+{"w":"debark","p":"/dɪˈbɑːk/","m":["(使) 下船 (飞机，车等)", "卸 (客，货)"]},
+{"w":"seamy","p":"/ˈsiːmi/","m":["肮脏的，堕落的"]},
+{"w":"nebulous","p":"/ˈnɛbjələs/","m":["模糊的"]},
+{"w":"fleeting","p":"/ˈflitɪŋ/","m":["稍纵即逝的，短暂的"]},
+{"w":"deluge","p":"/ˈdɛljʊdʒ/","m":["大暴雨", "大量"]},
+{"w":"forfeit","p":"/ˈfɔrfət/","m":["罚金"]},
+{"w":"mundane","p":"/mʌnˈdeɪn/","m":["平凡的"]},
+{"w":"dawdle","p":"/ˈdɔːdl/","m":["拖拖拉拉"]},
+{"w":"umbrage","p":"/ˈʌmbrɪdʒ/","m":["不悦，生气"]},
+{"w":"grueling","p":"/ˈgruːəlɪŋ/","m":["费时间花心思的"]},
+{"w":"detest","p":"/dɪˈtɛst/","m":["厌恶"]},
+{"w":"stultify","p":"/ˈstʌltɪfaɪ/","m":["使无效，抑制"]},
+{"w":"raspy","p":"/ˈræspi/","m":["声音刺耳的"]},
+{"w":"preen","p":"/prin/","m":["打扮修饰"]},
+{"w":"dogmatic","p":"/dɔːɡˈmætɪk/","m":["武断的，自以为是的"]},
+{"w":"callous","p":"/ˈkæləs/","m":["无同情心的，冷漠的"]},
+{"w":"carp","p":"/kɑrp/","m":["对小事吹毛求疵，挑剔，表现不满"]},
+{"w":"cherished","p":"/ˈtʃerɪʃ/","m":["受喜爱的，珍爱的"]},
+{"w":"winsome","p":"/ˈwɪnsəm/","m":["迷人的，漂亮的"]},
+{"w":"nettle","p":"/ˈnɛtl/","m":["惹怒"]},
+{"w":"exorbitant","p":"/ɪɡˈzɔrbɪtənt/","m":["过度的"]},
+{"w":"sluggard","p":"/ˈslʌɡərd/","m":["懒人"]},
+{"w":"mirage","p":"/məˈrɑʒ/","m":["海市蜃楼，幻想"]},
+{"w":"hammer","p":"/ˈhæmə/","m":["屡次重申"]},
+{"w":"mockery","p":"/ˈmɑkəri/","m":["鄙视，嘲弄", "以嘲笑为目的的模仿"]},
+{"w":"smug","p":"/smʌɡ/","m":["自大的，自鸣得意的"]},
+{"w":"lethal","p":"/ˈliθl/","m":["非常有害的，致命的"]},
+{"w":"preempt","p":"/priːˈempt/","m":["预先占有"]},
+{"w":"impenetrable","p":"/ɪmˈpɛnɪtrəbl/","m":["不可渗透的，不可穿透的", "难以理解的"]},
+{"w":"debacle","p":"/deɪˈbɑːkl/","m":["溃败"]},
+{"w":"judicious","p":"/dʒuˈdɪʃəs/","m":["明智的，慎重的"]},
+{"w":"recoil","p":"/ˈrikɔɪl/","m":["i. 退却，畏缩"]},
+{"w":"thick-skinned","p":"/thick-skinned/","m":["冷漠无情的，不顾及他人感受的"]},
+{"w":"supercilious","p":"/ˌsuːpərˈsɪliəs/","m":["高傲的，傲慢的"]},
+{"w":"knack","p":"/næk/","m":["诀窍，聪明的做法"]},
+{"w":"sloth","p":"/sloθ/","m":["怠惰，懒惰"]},
+{"w":"annex","p":"/əˈnɛks/","m":["添加，合并"]},
+{"w":"perceptible","p":"/pərˈseptəbl/","m":["可察觉的"]},
+{"w":"worldly","p":"/ˈwɝldli/","m":["世间的，世俗的", "老练的"]},
+
+
+    ]
+  }
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 词库结束 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 词库结束 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+  };
+
+  // ===================== MODAL =====================
+
+
+
+let currentTab = 'plan'; // 💡 默认打开计划管理
+
+  function openModal() {
+    document.getElementById('modalOverlay').classList.add('show');
+    const tabs = document.querySelectorAll('.modal-tab');
+    let targetIdx = 0;
+    if (currentTab === 'exam') targetIdx = 1;
+    if (currentTab === 'import') targetIdx = 2;
+    if (currentTab === 'data') targetIdx = 3;
+    if (currentTab === 'clear') targetIdx = 4;
+    switchTab(currentTab, tabs[targetIdx]);
+  }
+
+  function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+
+  function switchTab(tab, el) {
+    currentTab = tab;
+    document.querySelectorAll('.modal-tab').forEach(t => {
+        t.classList.remove('active');
+
+    });
+    if (el) el.classList.add('active');
+    const body = document.getElementById('modalBody');
+
+    if (tab === 'plan') {
+      body.innerHTML = renderPlanTab(); // 💡 渲染计划管理
+    } else if (tab === 'exam') {
+      body.innerHTML = renderBankSection(EXAM_BANKS, 'exam');
+    } else if (tab === 'import') {
+      body.innerHTML = renderImportTab();
+    } else if (tab === 'data') {
+      body.innerHTML = renderDataTab();
+    } else if (tab === 'clear') {
+      body.innerHTML = renderClearTab();
+    }
+  }
+
+  function renderBankSection(banks, prefix) {
+    let html = '<div class="bank-grid">';
+    for (const [key, bank] of Object.entries(banks)) {
+      const id = prefix + '_' + key;
+      const sel = activeBank === id ? 'selected' : '';
+      html += `<div class="bank-card ${sel}" onclick="selectBank('${prefix}','${key}',this)">
+        <div class="bc-check">✓</div>
+        <div class="bc-name">${bank.emoji} ${bank.name}</div>
+        <div class="bc-count">${bank.words.length} 词</div>
+      </div>`;
+    }
+    html += '</div>';
+    html += '<div style="margin-top:16px;text-align:right"><button class="btn btn-primary" onclick="loadSelectedBank()">加载选中词库</button></div>';
+    return html;
+  }
+
+  let pendingBank = null;
+  function selectBank(prefix, key, el) {
+    document.querySelectorAll('.bank-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    pendingBank = { prefix, key };
+  }
+
+  function loadSelectedBank() {
+    if (!pendingBank) return;
+    const { prefix, key } = pendingBank;
+    const banks = prefix === 'exam' ? EXAM_BANKS : CATEGORY_BANKS;
+    const bank = banks[key];
+    if (!bank) return;
+
+    allWords = bank.words.map(w => ({
+      word: w.w, phonetic: w.p, meanings: w.m, apiMeanings: [], loaded: true
+    }));
+    activeBank = prefix + '_' + key;
+    curPage = 1;
+    resetShuffle(); // 重置乱序
+    saveState();
+    render();
+    closeModal();
+    document.getElementById('activeBankLabel').innerHTML = `<span class="active-bank">${bank.emoji} ${bank.name}</span>`;
+    pendingBank = null;
+  }
+
+  function renderImportTab() {
+    return `<div class="import-section">
+      <p>每行一个单词，支持以下格式：<br>
+      <code>apple</code> — 仅单词<br>
+      <code>apple 苹果</code> — 单词 + 释义（空格/逗号/Tab）<br>
+      <code>bank 银行;河岸;储存</code> — 多个释义用分号隔开，排序 = 重要程度</p>
+      <textarea id="importText" placeholder="apple 苹果&#10;bank 银行;河岸;储存&#10;run 跑步;运行;经营&#10;extraordinary 非凡的"></textarea>
+      <div class="import-actions">
+        <button class="btn btn-primary" onclick="importWords()">确认导入</button>
+        <label class="file-label" for="fileInput">📂 选择文件</label>
+        <input type="file" id="fileInput" accept=".txt,.csv" style="display:none" onchange="handleFile(event)">
+      </div>
+    </div>`;
+  }
+  // ===================== 数据管理 (导出/恢复) =====================
+// ===================== 数据管理 (导出/恢复) =====================
+function renderDataTab() {
+    let planCheckboxes = '';
+    for (let id in plans) {
+        planCheckboxes += `
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 5px;">
+          <input type="checkbox" class="plan-select-item" value="${id}" checked style="width: 14px; height: 14px;">
+          <span style="font-size: 13px; color: var(--text);">${escapeHtml(plans[id].name)}</span>
+        </label>`;
+    }
+
+    return `<div class="import-section" style="text-align: center; padding: 10px 20px;">
+      <div style="font-size: 32px; margin-bottom: 10px; opacity: 0.8;">🗄️</div>
+
+      <div style="display: flex; gap: 20px; justify-content: center; text-align: left; margin-bottom: 20px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 140px;">
+          <p style="font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 8px;">1. 选择数据项</p>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 5px;">
+            <input type="checkbox" id="dataWords" checked style="width: 14px; height: 14px;">
+            <span style="font-size: 13px;">📚 单词词库</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 5px;">
+            <input type="checkbox" id="dataProgress" checked style="width: 14px; height: 14px;">
+            <span style="font-size: 13px;">📈 学习进度</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 5px;">
+            <input type="checkbox" id="dataStubborn" checked style="width: 14px; height: 14px;">
+            <span style="font-size: 13px;">⭐ 顽固单词</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="dataSettings" checked style="width: 14px; height: 14px;">
+            <span style="font-size: 13px;">⚙️ 页面设置</span>
+          </label>
+        </div>
+
+        <div style="flex: 1; min-width: 180px; border-left: 1px solid var(--border); padding-left: 20px;">
+          <p style="font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 8px;">2. 选择学习计划</p>
+          <div style="max-height: 120px; overflow-y: auto; padding-right: 5px;">
+            ${planCheckboxes}
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+        <button class="btn btn-primary" onclick="exportData()">📥 导出选中计划</button>
+        <label class="btn" style="cursor: pointer; margin: 0;">
+          📂 导入并合并计划
+          <input type="file" id="restoreFileInput" accept=".json" style="display:none" onchange="handleRestore(event)">
+        </label>
+      </div>
+    </div>`;
+  }
+
+function exportData() {
+// 💡 修改拦截逻辑：如果未激活 OR 处于试用期，则弹出升级窗口
+  if (!isPremium || isTrialMode) {
+      showPremiumModal();
+      return;
+  }
+  const eWords = document.getElementById('dataWords').checked;
+  // ... 后续导出逻辑保持不变 ...
+
+    const eProgress = document.getElementById('dataProgress').checked;
+    const eStubborn = document.getElementById('dataStubborn').checked;
+    const eSettings = document.getElementById('dataSettings').checked;
+
+    const selectedPlanIds = Array.from(document.querySelectorAll('.plan-select-item:checked')).map(el => el.value);
+
+    if (selectedPlanIds.length === 0) {
+        showDictToast("⚠️ 请至少选择一个学习计划！", "error");
+        return;
+    }
+
+    saveState();
+
+    const backupData = {
+        exportTime: new Date().toLocaleString(),
+        plans: {},
+        version: "v4-split-mode"
+    };
+
+    selectedPlanIds.forEach(id => {
+        const sourcePlan = plans[id];
+        const pData = { name: sourcePlan.name };
+
+        if (eWords) {
+            pData.allWords = sourcePlan.allWords;
+            pData.activeBank = sourcePlan.activeBank;
+        }
+        if (eProgress) {
+            pData.curPage = sourcePlan.curPage;
+            pData.learningProgress = sourcePlan.learningProgress;
+        }
+        if (eStubborn) pData.stubbornDict = sourcePlan.stubbornDict;
+
+        backupData.plans[id] = pData;
+    });
+
+    if (eSettings) {
+        backupData.globalSettings = {
+            theme: localStorage.getItem('vocab-theme'),
+            size: localStorage.getItem('vocab-size'),
+            font: localStorage.getItem('vocab-font'),
+            voice: localStorage.getItem('vocab-voice')
+        };
+    }
+
+    const dataStr = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `VocabLab_Backup_${selectedPlanIds.length}Plans.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showDictToast("✅ 导出成功", "success");
+  }
+
+function handleRestore(event) {
+// 💡 同步修改拦截逻辑
+  if (!isPremium || isTrialMode) {
+      showPremiumModal();
+      return;
+  }
+  const file = event.target.files[0];
+    if (!file) return;
+
+    const iWords = document.getElementById('dataWords').checked;
+    const iProgress = document.getElementById('dataProgress').checked;
+    const iStubborn = document.getElementById('dataStubborn').checked;
+    const iSettings = document.getElementById('dataSettings').checked;
+
+    const reader = new FileReader();
+    reader.onload = async function(e) { // 💡 注意这里加了 async
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!data.plans) throw new Error();
+
+            // 💡 替换为自定义弹窗
+            const confirmed = await customConfirm(`确定导入备份中的 ${Object.keys(data.plans).length} 个计划吗？`);
+            if (!confirmed) return;
+
+            // ... 下面的导入逻辑保持不变 ...
+
+            if (!confirm(`确定导入备份中的 ${Object.keys(data.plans).length} 个计划吗？`)) return;
+
+            for (let id in data.plans) {
+                let newId = id;
+                if (plans[newId]) {
+                    newId = 'plan_' + Date.now() + '_' + Math.floor(Math.random()*1000);
+                }
+
+                const backupPlan = data.plans[id];
+                plans[newId] = {
+                    name: backupPlan.name + (id === newId ? "" : " (新)"),
+                    allWords: iWords ? (backupPlan.allWords || []) : [],
+                    activeBank: iWords ? (backupPlan.activeBank || '') : '',
+                    stubbornDict: iStubborn ? (backupPlan.stubbornDict || {}) : {},
+                    learningProgress: iProgress ? (backupPlan.learningProgress || []) : [],
+                    curPage: iProgress ? (backupPlan.curPage || 1) : 1
+                };
+            }
+
+            if (iSettings && data.globalSettings) {
+                const s = data.globalSettings;
+                if (s.theme) localStorage.setItem('vocab-theme', s.theme);
+                if (s.size) localStorage.setItem('vocab-size', s.size);
+                if (s.font) localStorage.setItem('vocab-font', s.font);
+                if (s.voice) localStorage.setItem('vocab-voice', s.voice);
+            }
+
+            localStorage.setItem('vocab-plans', JSON.stringify(plans));
+            sessionStorage.setItem('vocab_pending_toast', "✅ 选中数据项已跨计划合并成功");
+            location.reload();
+
+        } catch (err) {
+            showDictToast("❌ 导入失败：无效的备份文件", "error");
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  // ===================== IMPORT =====================
+  function parseInput(text) {
+    return text.trim().split('\n').filter(l => l.trim()).map(line => {
+      line = line.trim();
+      let word, meaningsRaw;
+      if (line.includes('\t')) {
+        const p = line.split('\t'); word = p[0].trim(); meaningsRaw = p.slice(1).join(';');
+      } else {
+        const m = line.match(/^([a-zA-Z\-']+)\s*[,，]?\s*(.*)$/);
+        if (m) { word = m[1].trim(); meaningsRaw = m[2].trim(); } else { word = line; meaningsRaw = ''; }
+      }
+      let meanings = meaningsRaw ? meaningsRaw.split(/[;；]/).map(s => s.trim()).filter(Boolean) : [];
+      return { word, meanings, phonetic: '', apiMeanings: [], loaded: false };
+    }).filter(w => w.word);
+  }
+
+  function importWords() {
+  if (!isPremium) { showPremiumModal(); return; } // <-- 增加这一行
+    const ta = document.getElementById('importText');
+    if (!ta || !ta.value.trim()) return;
+    const newWords = parseInput(ta.value);
+
+    allWords = allWords.concat(newWords);
+    activeBank = '';
+    document.getElementById('activeBankLabel').innerHTML = '<span class="active-bank">自定义</span>';
+    curPage = 1;
+    resetShuffle(); // 重置乱序
+    saveState();
+    render();
+    closeModal();
+  }
+
+  async function fetchPhonetic(word) {
+    try {
+      const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data?.[0]) return null;
+      let phonetic = data[0].phonetic || '';
+      if (!phonetic && data[0].phonetics) for (const p of data[0].phonetics) { if (p.text) { phonetic = p.text; break; } }
+      let meanings = [];
+      if (data[0].meanings) for (const m of data[0].meanings) {
+        const pos = m.partOfSpeech || '';
+        if (m.definitions) for (const d of m.definitions.slice(0, 2)) meanings.push(`[${pos}] ${d.definition}`);
+      }
+      return { phonetic, apiMeanings: meanings.slice(0, 5) };
+    } catch(e) { return null; }
+  }
+
+  function handleFile(e) {
+  if (!isPremium) { showPremiumModal(); return; } // <-- 增加这一行
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => { const ta = document.getElementById('importText'); if(ta) ta.value = ev.target.result; };
+    r.readAsText(f); e.target.value = '';
+  }
+
+  // ===================== 侧边栏功能 (顽固单词 & 学习进度) =====================
+  function toggleStubborn(wordStr) {
+    const isCurrentlyStubborn = !!stubbornDict[wordStr];
+
+    if (isCurrentlyStubborn) {
+      delete stubbornDict[wordStr];
+      document.querySelectorAll(`.stubborn-btn[data-word="${CSS.escape(wordStr)}"]`).forEach(b => {
+        b.classList.remove('active');
+      });
+    } else {
+      let wObj = allWords.find(w => w.word === wordStr);
+      if (!wObj) wObj = { word: wordStr, meanings: [], apiMeanings: [] };
+      stubbornDict[wordStr] = { ...wObj };
+      document.querySelectorAll(`.stubborn-btn[data-word="${CSS.escape(wordStr)}"]`).forEach(b => {
+        b.classList.add('active');
+      });
+    }
+
+    saveState();
+    renderSidebarLists();
+  }
+
+  function getBankNameLabel(id) {
+    if (!id) return '自定义导入';
+    if (id.includes('_')) {
+      const [prefix, key] = id.split('_');
+      const banks = prefix === 'exam' ? EXAM_BANKS : (typeof CATEGORY_BANKS !== 'undefined' ? CATEGORY_BANKS : {});
+      return banks[key] ? banks[key].name : '自定义导入';
+    }
+    return '自定义导入';
+  }
+
+  function recordProgress() {
+    if (allWords.length === 0) return;
+    const d = new Date();
+    const todayStr = d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+    const bankName = getBankNameLabel(activeBank);
+
+    let record = learningProgress.find(r => r.date === todayStr && r.bankId === activeBank);
+
+    if (record) {
+      if (curPage < record.startPage) record.startPage = curPage;
+      if (curPage > record.endPage) record.endPage = curPage;
+    } else {
+      learningProgress.unshift({
+        date: todayStr,
+        bankId: activeBank,
+        bankName: bankName,
+        startPage: curPage,
+        endPage: curPage
+      });
+    }
+    if (learningProgress.length > 50) learningProgress = learningProgress.slice(0, 50);
+    saveState();
+  }
+
+  function reviewProgress(bankId, startPage) {
+    if (activeBank !== bankId) {
+      if (!bankId) {
+        alert("⚠️ 该进度属于您【自定义导入】的单词。系统目前已切换了词库。\n请重新通过手动导入相同的词汇来复原进度。");
+        return;
+      }
+      const [prefix, key] = bankId.split('_');
+      const banks = prefix === 'exam' ? EXAM_BANKS : (typeof CATEGORY_BANKS !== 'undefined' ? CATEGORY_BANKS : {});
+      const bank = banks[key];
+      if (bank) {
+        allWords = bank.words.map(w => ({
+          word: w.w, phonetic: w.p, meanings: w.m, apiMeanings: [], loaded: true
+        }));
+        activeBank = bankId;
+        document.getElementById('activeBankLabel').innerHTML = `<span class="active-bank">${bank.emoji} ${bank.name}</span>`;
+      } else {
+        alert("找不到对应的历史内置词库！");
+        return;
+      }
+    }
+
+    const totalPages = Math.ceil(allWords.length / PER_PAGE) || 1;
+    curPage = startPage > totalPages ? totalPages : startPage;
+
+    window.speechSynthesis.cancel();
+    playingAll = false;
+    document.getElementById('playAllBtn').textContent = '▶ 播放本页';
+
+    resetShuffle(); // 回看复习时重置乱序
+    saveState();
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function deleteProgress(index) {
+    if (confirm('确定要删除这条学习进度吗？')) {
+      learningProgress.splice(index, 1);
+      saveState();
+      renderSidebarLists();
+    }
+  }
+
+ // ===================== 核心：渲染学习热力图 =====================
+  function renderHeatmap() {
+      const heatmapArea = document.getElementById('heatmapArea');
+      if (!heatmapArea) return;
+
+      // 1. 获取过去 28 天的日期序列
+      const days = [];
+      for (let i = 27; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const dateStr = d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+          days.push({ dateStr, count: 0 });
+      }
+
+      // 2. 统计每天的学习活跃度 (以翻页数量为权重)
+      learningProgress.forEach(p => {
+          const target = days.find(d => d.dateStr === p.date);
+          if (target) {
+              const pages = Math.abs(p.endPage - p.startPage) + 1;
+              target.count += pages;
+          }
+      });
+
+      // 3. 构建 HTML
+      let html = `
+          <div class="heatmap-header">
+              <span>📅 最近 28 天学习热力图</span>
+              <span>活跃度</span>
+          </div>
+          <div class="heatmap-grid">
+      `;
+
+      days.forEach(day => {
+          let level = 0;
+          if (day.count > 10) level = 4;
+          else if (day.count > 5) level = 3;
+          else if (day.count > 2) level = 2;
+          else if (day.count > 0) level = 1;
+
+          html += `<div class="heatmap-cell level-${level}"
+                        data-date="${day.dateStr}: 学习 ${day.count} 页"
+                        title="${day.dateStr}: 学习 ${day.count} 页"></div>`;
+      });
+
+      html += `</div>`;
+      heatmapArea.innerHTML = html;
+  }
+
+  function renderSidebarLists() {
+    const stubs = Object.values(stubbornDict);
+    const sbStub = document.getElementById('sbList_stubborn');
+    sbStub.innerHTML = stubs.length === 0 ? '<div style="padding:40px 20px;text-align:center;color:var(--text-dim);font-size:12px;">暂无顽固单词<br><br>将鼠标移动到卡片上<br>点击 ★ 即可添加</div>'
+    : stubs.map(w => {
+      const ew = w.word.replace(/'/g, "\\'");
+      const m = w.meanings && w.meanings.length ? w.meanings[0] : (w.apiMeanings ? w.apiMeanings[0] : '');
+      return `<div class="sb-item">
+        <div class="sb-info" onclick="speak('${ew}')">
+          <div class="sb-word">${esc(w.word)}</div>
+          <div class="sb-mean">${esc(m||'')}</div>
+        </div>
+        <button class="sb-del" onclick="toggleStubborn('${ew}')" title="移除">✕</button>
+      </div>`;
+    }).join('');
+
+    // 注意：这里改成了向 progressItemsList 容器注入内容
+    const sbProg = document.getElementById('progressItemsList');
+    if (learningProgress.length === 0) {
+      sbProg.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-dim);font-size:12px;">暂无学习进度记录<br><br>学习/翻页时会自动记录</div>';
+    } else {
+      sbProg.innerHTML = learningProgress.map((p, idx) => `
+        <div class="sb-item" style="flex-direction: column; align-items: flex-start; gap: 8px; position: relative;">
+          <button class="sb-del" style="position: absolute; top: 10px; right: 10px; margin: 0; padding: 2px 6px;" onclick="deleteProgress(${idx})" title="删除此记录">✕</button>
+          <div style="font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.4; padding-right: 20px;">
+             [${p.date}]<br>
+             <span style="color:var(--accent)">${p.bankName}</span><br>
+             第${p.startPage}页—第${p.endPage}页
+          </div>
+          <button class="btn btn-sm" style="align-self: flex-end;" onclick="reviewProgress('${p.bankId}', ${p.startPage})">回看/复习</button>
+        </div>
+      `).join('');
+    }
+
+    // 触发热力图渲染
+    renderHeatmap();
+  }
+
+  // ===================== 测验功能 =====================
+  function startTest() {
+    testQueue = Object.values(stubbornDict);
+    if (testQueue.length === 0) {
+      alert("您的顽固单词列表是空的，先去添加一些吧！");
+      return;
+    }
+    testCurrentIndex = 0;
+    testRememberedWords = [];
+
+    document.getElementById('testModalOverlay').classList.add('show');
+    document.getElementById('testActiveView').style.display = 'flex';
+    document.getElementById('testSummaryView').style.display = 'none';
+
+    showTestWord();
+  }
+// ===================== 拼写测验核心逻辑 =====================
+let spellFailCount = 0;
+
+function startSpellingTest() {
+  testQueue = Object.values(stubbornDict);
+  if (testQueue.length === 0) {
+    alert("您的顽固单词列表是空的，先去添加一些吧！");
+    return;
+  }
+
+  // 打乱拼写顺序效果更好
+  testQueue.sort(() => Math.random() - 0.5);
+
+  testCurrentIndex = 0;
+  testRememberedWords = []; // 拼写中，只有一次全对才算 remembered
+
+  document.getElementById('testModalOverlay').classList.add('show');
+  document.getElementById('testActiveView').style.display = 'none';
+  document.getElementById('testSummaryView').style.display = 'none';
+  document.getElementById('spellActiveView').style.display = 'flex';
+
+  // 绑定输入框事件
+  const input = document.getElementById('spellInput');
+  input.onkeydown = handleSpellInput;
+
+  showSpellWord();
+}
+
+function showSpellWord() {
+  if (testCurrentIndex >= testQueue.length) {
+    // 借用原有的测验结束界面
+    document.getElementById('spellActiveView').style.display = 'none';
+    endTest();
+    return;
+  }
+
+  spellFailCount = 0;
+  const currentObj = testQueue[testCurrentIndex];
+
+  document.getElementById('spellProgress').textContent = `Word ${testCurrentIndex + 1} of ${testQueue.length}`;
+
+  // 提取释义
+  let meaningText = '听音拼写';
+  if (currentObj.meanings && currentObj.meanings.length) {
+    meaningText = currentObj.meanings.join('; ');
+  } else if (currentObj.apiMeanings && currentObj.apiMeanings.length) {
+    meaningText = currentObj.apiMeanings.join('; ');
+  }
+  document.getElementById('spellWordMeaning').innerHTML = meaningText.replace(/;/g, ' <span style="color:var(--border)">|</span> ');
+  document.getElementById('spellPhonetic').textContent = currentObj.phonetic || '';
+
+  // 重置输入框和提示
+  const input = document.getElementById('spellInput');
+  input.value = '';
+  input.className = 'spell-input';
+  document.getElementById('spellHint').classList.remove('show');
+
+  // 延迟聚焦并自动发音
+  setTimeout(() => {
+      input.focus();
+      speak(currentObj.word);
+  }, 300);
+}
+
+function handleSpellInput(e) {
+  const input = e.target;
+  const currentWord = testQueue[testCurrentIndex].word;
+
+  // 屏蔽 Tab 键的默认切换焦点行为，改为请求提示
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    showSpellHint(currentWord);
+    spellFailCount++; // 看了提示就不算一次记住了
+    return;
+  }
+
+  // 💡 新增：按 Esc 直接看答案并跳过
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    spellFailCount++; // 看了答案肯定算作失败
+    input.value = currentWord;
+    input.className = 'spell-input reveal'; // 变为橙色
+    input.disabled = true; // 锁定输入框，防止乱敲
+
+    // 停留 1.5 秒让你记住正确拼写，然后进入下一个词
+    setTimeout(() => {
+      input.disabled = false;
+      testCurrentIndex++;
+      showSpellWord();
+    }, 1500);
+    return;
+  }
+
+  if (e.key === 'Enter') {
+    const userVal = input.value.trim().toLowerCase();
+    const targetVal = currentWord.toLowerCase();
+
+    if (userVal === targetVal) {
+      // 拼写正确！
+      input.className = 'spell-input success';
+      if (spellFailCount === 0) {
+        testRememberedWords.push(currentWord); // 一次过才算记住
+      }
+
+      // 延迟进入下一个
+      setTimeout(() => {
+        testCurrentIndex++;
+        showSpellWord();
+      }, 500);
+
+    } else {
+      // 拼写错误：触发震动动画
+      spellFailCount++;
+      input.className = 'spell-input'; // 先移除
+      void input.offsetWidth; // 触发重绘重排 (CSS 动画核心技巧)
+      input.className = 'spell-input error';
+
+      // 错误2次以上自动给提示
+      if (spellFailCount >= 2) {
+          showSpellHint(currentWord);
+      }
+
+      setTimeout(() => { input.value = ''; input.focus(); }, 400);
+    }
+  }
+}
+
+// 生成部分字母提示 (例如: apple -> a _ _ l e)
+function showSpellHint(word) {
+    const hintEl = document.getElementById('spellHint');
+    if (word.length <= 2) {
+        hintEl.textContent = word;
+    } else {
+        let hintArr = Array(word.length).fill('_');
+        hintArr[0] = word[0]; // 首字母
+        hintArr[word.length - 1] = word[word.length - 1]; // 尾字母
+        // 如果比较长，中间再给一个
+        if (word.length >= 6) {
+            const mid = Math.floor(word.length / 2);
+            hintArr[mid] = word[mid];
+        }
+        hintEl.textContent = hintArr.join(' ');
+    }
+    hintEl.classList.add('show');
+}
+  function showTestWord() {
+    if (testCurrentIndex >= testQueue.length) {
+      endTest();
+      return;
+    }
+    const currentObj = testQueue[testCurrentIndex];
+    const currentWord = currentObj.word;
+    document.getElementById('testWordText').textContent = currentWord;
+
+    let meaningText = '';
+    if (currentObj.meanings && currentObj.meanings.length) {
+      meaningText = currentObj.meanings.join('; ');
+    } else if (currentObj.apiMeanings && currentObj.apiMeanings.length) {
+      meaningText = currentObj.apiMeanings.join('; ');
+    } else {
+      meaningText = '暂无释义';
+    }
+    document.getElementById('testWordMeaning').textContent = meaningText;
+
+    setTimeout(() => { speak(currentWord); }, 100);
+  }
+
+  function answerTest(isRemembered) {
+    if (isRemembered) {
+      testRememberedWords.push(testQueue[testCurrentIndex].word);
+    }
+    testCurrentIndex++;
+    showTestWord();
+  }
+
+  function endTest() {
+    document.getElementById('testActiveView').style.display = 'none';
+    document.getElementById('testSummaryView').style.display = 'flex';
+
+    const total = testQueue.length;
+    const remCount = testRememberedWords.length;
+
+    document.getElementById('testSummaryText').innerHTML = `测验结束！🎉<br><br>共测验了 <b>${total}</b> 个单词<br>其中记住了 <b>${remCount}</b> 个`;
+
+    if (remCount > 0) {
+      document.getElementById('testActionArea').style.display = 'block';
+      document.getElementById('testDoneArea').style.display = 'none';
+    } else {
+      document.getElementById('testActionArea').style.display = 'none';
+      document.getElementById('testDoneArea').style.display = 'block';
+    }
+  }
+
+  function finishTest(removeRemembered) {
+    if (removeRemembered && testRememberedWords.length > 0) {
+      testRememberedWords.forEach(word => {
+        delete stubbornDict[word];
+        document.querySelectorAll(`.stubborn-btn[data-word="${CSS.escape(word)}"]`).forEach(b => {
+          b.classList.remove('active');
+        });
+      });
+      saveState();
+      renderSidebarLists();
+    }
+    closeTestModal();
+  }
+
+  function closeTestModal() {
+    document.getElementById('testModalOverlay').classList.remove('show');
+  }
+
+
+  // ===================== 全网获取数据 API (公共) =====================
+
+  function extractGoogleExamples(data) {
+      let examples = [];
+      function traverse(node) {
+          if (Array.isArray(node)) {
+              node.forEach(traverse);
+          } else if (typeof node === 'string') {
+              if (node.includes('<b>') && node.includes('</b>')) {
+                  let cleanText = node.replace(/<\/?b>/g, '').replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').trim();
+                  if (cleanText.split(' ').length >= 5) {
+                      cleanText = cleanText.charAt(0).toUpperCase() + cleanText.slice(1);
+                      if (!/[.!?]$/.test(cleanText)) cleanText += '.';
+                      examples.push(cleanText);
+                  }
+              }
+          }
+      }
+      traverse(data);
+      return [...new Set(examples)].slice(0, 5);
+  }
+
+  async function getGoogleDictExamples(word) {
+      try {
+          const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=ex&q=${encodeURIComponent(word)}`;
+          const res = await fetch(url);
+          const data = await res.json();
+          return extractGoogleExamples(data);
+      } catch(e) { return []; }
+  }
+
+  async function translateText(text) {
+    try {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-CN&dt=t&q=${encodeURIComponent(text)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      return data[0].map(item => item[0]).join('');
+    } catch(e) { return "词义加载失败"; }
+  }
+
+  function generateMockExamples(word) {
+    return [
+        { en: `It is highly recommended to learn how to use the word "${word}" in daily conversations.`, zh: `强烈建议在日常对话中学习如何使用 "${word}" 这个词。` },
+        { en: `Could you please provide a practical example containing "${word}"?`, zh: `你能提供一个包含 "${word}" 的实用例子吗？` },
+        { en: `The professor explained the nuanced meaning of "${word}" very clearly.`, zh: `教授非常清晰地解释了 "${word}" 的细微含义。` },
+        { en: `I accidentally encountered the word "${word}" while reading an article.`, zh: `我在读文章时偶然遇到了 "${word}" 这个词。` },
+        { en: `Mastering the usage of "${word}" will improve your language skills.`, zh: `掌握 "${word}" 的用法将提高你的语言技能。` }
+    ];
+  }
+
+  function highlightWord(sentence, word) {
+    const regex = new RegExp(`(${word})`, 'gi');
+    return sentence.replace(regex, `<span style="color:var(--accent);">$1</span>`);
+  }
+
+  // ===================== RENDER & LAZY FETCHING =====================
+  function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  function renderMeanings(w) {
+    let ms = w.meanings.length > 0 ? w.meanings : (w.apiMeanings || []);
+    if (!ms.length) return '';
+    return ms.map((m, i) => {
+      const c = MCOLORS[Math.min(i, MCOLORS.length - 1)];
+      return `<div class="word-meaning-line"><span class="meaning-rank" style="background:${c}"></span><span class="meaning-text" style="color:${c}">${esc(m)}</span></div>`;
+    }).join('');
+  }
+
+  async function lazyFetchCurrentPage(s, e) {
+    const pageWords = allWords.slice(s, e);
+
+    for (let localIdx = 0; localIdx < pageWords.length; localIdx++) {
+      const w = pageWords[localIdx];
+      const globalIdx = s + localIdx;
+
+      if (w.loaded === false) {
+        w.loaded = 'fetching';
+
+        try {
+          const result = await fetchPhonetic(w.word);
+          w.loaded = true;
+
+          if (result) {
+            if (!w.phonetic) w.phonetic = result.phonetic || '';
+            if (w.meanings.length === 0 && result.apiMeanings && result.apiMeanings.length > 0) {
+              w.apiMeanings = result.apiMeanings;
+            }
+          }
+
+          saveState();
+
+          const card = document.getElementById(`word-card-${globalIdx}`);
+          if (card) {
+              const phEl = card.querySelector('.word-phonetic');
+              if (phEl) phEl.innerHTML = w.phonetic ? esc(w.phonetic) : '';
+              const mEl = card.querySelector('.word-meanings');
+              if (mEl) mEl.innerHTML = renderMeanings(w);
+          }
+
+          await new Promise(resolve => setTimeout(resolve, 150));
+
+        } catch (error) {
+          w.loaded = true;
+          const card = document.getElementById(`word-card-${globalIdx}`);
+          if (card) {
+              const phEl = card.querySelector('.word-phonetic');
+              if (phEl) phEl.innerHTML = '<span class="loading-ph" style="opacity:0.5;">(获取失败)</span>';
+          }
+        }
+      }
+    }
+  }
+
+  function renderPage() {
+    const g = document.getElementById('wordGrid');
+    const s = (curPage - 1) * PER_PAGE, e = Math.min(s + PER_PAGE, allWords.length);
+
+    const pageWords = allWords.slice(s, e);
+
+    // 处理乱序渲染映射
+    let renderItems = pageWords.map((w, i) => ({ w: w, localIdx: i }));
+    if (isShuffled && shuffledIndices.length === pageWords.length) {
+      renderItems = shuffledIndices.map(idx => ({ w: pageWords[idx], localIdx: idx }));
+    }
+
+    g.innerHTML = renderItems.map((item, i) => {
+      const w = item.w;
+      const globalIdx = s + item.localIdx; // 始终绑定原始索引，确保右键修改/删除功能正常
+      const gi = globalIdx + 1; // 维持原始序号展示
+
+      const ew = w.word.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const ph = w.phonetic || (w.loaded === true ? '' : '<span class="loading-ph">...</span>');
+      const isStubborn = !!stubbornDict[w.word];
+      const starClass = isStubborn ? 'active' : '';
+
+      return `<div class="word-card" id="word-card-${globalIdx}" style="animation-delay:${i*10}ms" oncontextmenu="showContextMenu(event, ${globalIdx})">
+        <div class="word-index">${gi}</div>
+        <div class="word-main">
+          <div class="word-top"><div class="word-text">${esc(w.word)}</div><div class="word-phonetic">${w.phonetic ? esc(w.phonetic) : ph}</div></div>
+          <div class="word-meanings">${renderMeanings(w)}</div>
+        </div>
+        <div class="card-actions">
+          <button class="speak-btn hover-action-btn stubborn-btn ${starClass}" data-word="${esc(w.word)}" onclick="toggleStubborn('${ew}')" title="加入/移除顽固单词">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </button>
+          <button class="speak-btn" data-word="${esc(w.word)}" onclick="speak('${ew}')" title="发音">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>
+          </button>
+          <button class="speak-btn hover-action-btn explain-btn"
+            onmouseenter="handleExplainMouseEnter(event, '${ew}')"
+            onmouseleave="handleExplainMouseLeave()"
+            title="深度解释与全网例句 (悬停自动查看)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>
+            </svg>
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+
+    lazyFetchCurrentPage(s, e);
+  }
+
+  function executeJump() {
+    const input = document.getElementById('pageJumpInput');
+    if (!input) return;
+    const t = Math.ceil(allWords.length / PER_PAGE) || 1;
+    let n = parseInt(input.value, 10);
+    if (isNaN(n)) return;
+    if (n < 1) n = 1;
+    if (n > t) n = t;
+    goPage(n);
+  }
+
+  function renderPag() {
+    const t = Math.ceil(allWords.length / PER_PAGE) || 1, p = document.getElementById('pagination');
+    if (t <= 1) { p.innerHTML = ''; return; }
+
+    let h = `<button class="page-btn" onclick="goPage(${curPage-1})" ${curPage===1?'disabled':''}>◀</button>`;
+    for (let i = 1; i <= t; i++) {
+      if (t <= 7 || i === 1 || i === t || Math.abs(i - curPage) <= 1)
+        h += `<button class="page-btn ${i===curPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+      else if (Math.abs(i - curPage) === 2) h += `<button class="page-btn" disabled>…</button>`;
+    }
+    h += `<button class="page-btn" onclick="goPage(${curPage+1})" ${curPage===t?'disabled':''}>▶</button>`;
+
+    h += `<div class="page-input-wrapper">
+            <span>跳至</span>
+            <input type="number" class="page-input" id="pageJumpInput" min="1" max="${t}" placeholder="${curPage}" onkeydown="if(event.key==='Enter') executeJump()">
+            <span>页</span>
+            <button class="btn btn-sm" onclick="executeJump()" style="padding:4px 8px; min-width:auto; height:28px">GO</button>
+          </div>`;
+
+    p.innerHTML = h;
+  }
+
+  function goPage(n) {
+    const t = Math.ceil(allWords.length / PER_PAGE) || 1;
+    if (n < 1 || n > t) return;
+    curPage = n; window.speechSynthesis.cancel(); playingAll = false;
+    document.getElementById('playAllBtn').textContent = '▶ 播放本页';
+    resetShuffle(); // 翻页时重置乱序
+    saveState();
+    render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function render() {
+    const has = allWords.length > 0;
+    document.getElementById('emptyState').style.display = has ? 'none' : 'block';
+    document.getElementById('infoBar').style.display = has ? 'flex' : 'none';
+    document.getElementById('wordGrid').style.display = has ? 'grid' : 'none';
+
+    if (has) {
+      const t = Math.ceil(allWords.length / PER_PAGE);
+      // 💡 新增：计算并显示当前页的实际单词数量
+      const pageCountEl = document.getElementById('pageWordCount');
+const _s = (curPage - 1) * PER_PAGE, _e = Math.min(_s + PER_PAGE, allWords.length);
+if (pageCountEl) pageCountEl.innerHTML = '(本页 <span class="stat-num">' + (_e - _s) + '</span> 词)';
+
+      document.getElementById('totalCount').textContent = allWords.length;
+      document.getElementById('currentPage').textContent = curPage;
+      document.getElementById('totalPages').textContent = t;
+      renderPage();
+      renderPag();
+      recordProgress();
+    } else {
+      document.getElementById('wordGrid').innerHTML = '';
+      document.getElementById('pagination').innerHTML = '';
+    }
+
+    renderSidebarLists();
+  }
+
+
+// ===================== 当前页练习引擎 (Practice Engine) =====================
+let pracQueue = [];
+let pracCurrentIndex = 0;
+let pracMode = '';
+let pracCurrentWordObj = null;
+let pracSpellFailCount = 0; // 新增：记录错误次数
+let pracSource = 'page'; // 💡 新增：记录当前是在练本页还是练顽固单词
+
+function openPracticeMenu(source = 'page') {
+    pracSource = source; // 记录来源
+    const titleEl = document.querySelector('#practiceMenuOverlay .modal-header h2');
+    const descEl = document.querySelector('#practiceMenuOverlay .modal-body p');
+
+    if (source === 'page') {
+        const s = (curPage - 1) * PER_PAGE;
+        const e = Math.min(s + PER_PAGE, allWords.length);
+        if (e - s === 0) { alert("当前页没有单词可供练习！"); return; }
+        // 动态修改菜单文字
+        if (titleEl) titleEl.innerText = '🎯 本页强化训练';
+        if (descEl) descEl.innerText = '针对当前页面的单词进行专项训练，请选择练习模式：';
+    } else if (source === 'stubborn') {
+        if (Object.keys(stubbornDict).length === 0) { alert("您的顽固单词列表是空的，先去添加一些吧！"); return; }
+        // 动态修改菜单文字
+        if (titleEl) titleEl.innerText = '🎯 顽固单词训练';
+        if (descEl) descEl.innerText = '针对您收藏的顽固单词进行专项训练，请选择练习模式：';
+    }
+    document.getElementById('practiceMenuOverlay').classList.add('show');
+}
+
+function startPractice(mode) {
+    // 💡 新增拦截逻辑：点击具体练习模式时验证
+    if (!isPremium) {
+        // 先关闭当前的菜单弹窗，再弹出高级版激活框，视觉体验更清爽
+        document.getElementById('practiceMenuOverlay').classList.remove('show');
+        showPremiumModal();
+        return;
+    }
+
+    // --- 以下为原代码保持不变 ---
+    document.getElementById('practiceMenuOverlay').classList.remove('show');
+    pracMode = mode;
+
+    // 💡 核心：根据不同来源，将不同的数据塞进练习队列
+    if (pracSource === 'page') {
+
+        const s = (curPage - 1) * PER_PAGE;
+        const e = Math.min(s + PER_PAGE, allWords.length);
+        pracQueue = allWords.slice(s, e);
+    } else if (pracSource === 'stubborn') {
+        pracQueue = Object.values(stubbornDict); // 提取所有顽固单词
+    }
+
+    pracQueue.sort(() => Math.random() - 0.5); // 随机打乱
+    pracCurrentIndex = 0;
+    document.getElementById('practiceAppOverlay').classList.add('show');
+
+    const titles = { 'spell': '⌨️ 拼写挑战', 'choice': '🔀 词义辨析', 'listen': '🎧 听音辨意' };
+    const sourceText = pracSource === 'stubborn' ? ' (顽固单词)' : ' (本页单词)';
+    document.getElementById('pracModeTitle').innerText = titles[mode] + sourceText;
+
+    renderPracQuestion();
+}
+
+function forceQuitPractice() {
+    document.getElementById('practiceAppOverlay').classList.remove('show');
+    window.speechSynthesis.cancel();
+}
+
+function getCoreMeaning(wObj) {
+    let m = wObj.meanings && wObj.meanings.length ? wObj.meanings[0] : (wObj.apiMeanings ? wObj.apiMeanings[0] : '未知词义');
+    return m.replace(/^[a-zA-Z.]+\s*/, '').replace(/<[^>]+>/g, '').split(/[;；]/)[0].trim();
+}
+
+// ===================== 魔鬼级练习引擎 (100 选项版) =====================
+
+// 💡 100 个单词干扰项库
+const WORD_DISTRACTOR_POOL = [
+    "抽象", "具体", "犹豫", "繁荣", "偶尔", "经常", "维持", "毁灭", "核心", "扩展", "罕见", "普通", "积极", "消极", "乐观", "悲观", "精确", "模糊", "潜在", "现实",
+    "复杂", "简单", "详细", "概括", "传统", "创新", "稳定", "波动", "显著", "细微", "必然", "偶然", "深度", "浅显", "直接", "间接", "全面", "片面", "持续", "短暂",
+    "平衡", "倾斜", "效率", "缓慢", "独立", "依赖", "主观", "客观", "绝对", "相对", "固定", "灵活", "严厉", "温柔", "广泛", "狭隘", "积极", "被迫", "自愿", "强迫",
+    "优秀", "恶劣", "巨大", "微小", "迅速", "迟缓", "透明", "神秘", "独特", "普通", "永久", "临时", "主要", "次要", "勇敢", "胆怯", "坚定", "动摇", "慷慨", "吝啬",
+    "优雅", "粗俗", "敏锐", "迟钝", "丰富", "贫乏", "稳定", "动荡", "神圣", "世俗", "和谐", "冲突", "真实", "虚假", "合法", "违规", "先进", "落后", "成熟", "幼稚"
+];
+
+// 💡 100 个句子干扰项库
+const SENTENCE_DISTRACTOR_POOL = [
+    "我们需要更多的证据来证明这个理论。", "这个问题比我们想象的要复杂得多。", "他决定在会议结束前离开现场。", "科技的进步深刻地改变了人类的生活方式。", "保持积极的心态对身体健康至关重要。",
+    "她努力学习，希望能申请到心仪的大学。", "这个城市的交通系统需要全面升级。", "保护环境是每一个公民应尽的责任。", "他们正在讨论如何提高工厂的生产效率。", "历史总是在不断地重复着自己。",
+    "我们要学会在失败中寻找成功的机会。", "这部电影讲述了一个感人至深的英雄故事。", "政府正在采取措施缓解住房压力。", "艺术是人类灵魂的避风港。", "我们必须在截止日期前提交所有材料。",
+    "这个新软件极大地简化了办公流程。", "健康饮食和适度运动是长寿的关键。", "他总是能从不同的角度看问题。", "这场雨缓解了持续数月的旱情。", "无论发生什么，我们都要坚守原则。",
+    "音乐可以跨越国界和语言的障碍。", "这里的风景美得让人屏息。", "他以优异的成绩毕业于名牌大学。", "我们要学会尊重不同背景的人。", "这封信代表了我最真挚的祝福。",
+    "项目团队正在紧锣密鼓地筹备发布会。", "书本是通往智慧殿堂的阶梯。", "每一次挑战都是一次成长的机遇。", "良好的沟通是解决矛盾的基础。", "他为这个慈善机构捐献了大笔资金。",
+    "我们要珍惜身边的每一个人和每一分钟。", "新的发现为科学界带来了巨大震动。", "面对困难，他从未表现出退缩。", "这篇文章深刻剖析了当代社会现象。", "我们需要在两者之间寻找一个平衡点。",
+    "他的建议为我们指明了正确的方向。", "只有坚持不懈，才能最终达到终点。", "大自然拥有治愈一切的力量。", "保持好奇心是创新的源泉。", "这顿晚餐是我们旅程中最难忘的回忆。",
+    "学习一门外语可以开阔我们的视野。", "他的勇气激励了在场的所有人。", "我们要学会从错误中吸取教训。", "科技的发展让距离不再是问题。", "我们要保护濒危物种的生存环境。",
+    "这个决定对他的人生产生了重大影响。", "信任是建立长期关系的关键要素。", "我们要关注孩子们的心理健康成长。", "他通过不懈奋斗实现了自己的梦想。", "这首诗表达了诗人对家乡的思念。",
+    "规律的生活习惯有助于提高睡眠质量。", "我们应当积极拥抱未来的变化。", "他的言论引发了社交媒体的热烈讨论。", "我们要学会在忙碌中寻找宁静。", "这篇文章为我们提供了独特的见解。",
+    "坚持诚实守信是做人的基本准则。", "新的政策旨在促进经济平稳增长。", "他喜欢在周末去图书馆静静阅读。", "团队合作是完成艰巨任务的保障。", "我们要学会宽容他人的过错。",
+    "这个实验的结果证实了我们的假设。", "微笑是人类最美的语言。", "他总是乐于助人，深受大家喜爱。", "我们要加强对文化遗产的保护。", "这个机会对他来说是非常难得的。",
+    "不断学习是保持竞争力的唯一途径。", "阳光总在风雨后出现。", "他的表演赢得了全场观众的掌声。", "我们要培养独立思考的能力。", "这个故事告诉我们要珍惜和平。",
+    "创新是推动社会进步的引擎。", "我们要努力改善偏远地区的教育条件。", "他的话语充满了智慧和力量。", "我们要学会管理自己的情绪和时间。", "这个项目取得了阶段性的丰硕成果。",
+    "追求卓越是我们的终极目标。", "生活充满了各种不可预测的可能。", "我们要增强自我保护的意识。", "他的成功离不开家人的支持。", "这件艺术品展示了工匠的高超技艺。",
+    "我们要弘扬中华民族的传统美德。", "良好的开端是成功的一半。", "他的成就得到了国际社会的认可。", "我们要积极参与社区的志愿者活动。", "这个结论是基于大量调查研究得出的。",
+    "我们要关注全球气候变暖的问题。", "坚持梦想，终会迎来绽放的时刻。", "他的精神值得我们每一个人学习。", "我们要提高应对突发事件的能力。", "这个发现填补了该研究领域的空白。",
+    "生活不仅仅是眼前的苟且。", "我们要学会在逆境中保持冷静。", "他的作品具有极高的审美价值。", "我们要树立正确的人生观和价值观。", "这个旅程让我领略了世界的多彩。",
+    "我们要共同创造一个美好的未来。", "劳动创造了人类的文明。", "他的奉献精神感动了无数人。", "我们要注重知识的积累和应用。", "这个奖项是对他多年努力的肯定。"
+];
+
+// ===================== 修复版：干扰项生成逻辑 =====================
+function generateDistractors(correctStr, count, type = 'meaning') {
+    let options = new Set([correctStr]);
+
+    // 💡 修复核心逻辑：
+    // 如果是 'sentence' 类型，说明是听句选意。这种情况下，单词意思（如“落后”）毫无干扰力。
+    // 我们跳过动态单词池，直接去 100 句子的【SENTENCE_DISTRACTOR_POOL】里抽样。
+    if (type !== 'sentence') {
+        // 只有非句子模式（单词挑战/词义辨析）才从当前页单词里找干扰项
+        let dynamicPool = [...pracQueue].sort(() => Math.random() - 0.5);
+        for (let w of dynamicPool) {
+            if (options.size >= count) break;
+            let opt = (type === 'english') ? w.word : getCoreMeaning(w);
+            if (opt && opt !== '未知词义' && opt !== correctStr) options.add(opt);
+        }
+    }
+
+    // 2. 补齐选项（如果还没凑够 count 个，从 100 项魔鬼干扰库中随机抽样）
+    if (options.size < count) {
+        // 根据类型决定去哪个库抽：句子去句子库，单词/词义去单词库
+        const staticPool = (type === 'sentence') ? SENTENCE_DISTRACTOR_POOL : WORD_DISTRACTOR_POOL;
+        let shuffledStatic = [...staticPool].sort(() => Math.random() - 0.5);
+
+        for (let item of shuffledStatic) {
+            if (options.size >= count) break;
+            // 确保抽出来的干扰项不等于正确答案
+            if (item !== correctStr) options.add(item);
+        }
+    }
+
+    // 最终返回打乱顺序后的选项列表
+    return Array.from(options).sort(() => Math.random() - 0.5);
+}
+
+async function renderPracQuestion() {
+    if (pracCurrentIndex >= pracQueue.length) {
+        document.getElementById('pracQuestionArea').innerHTML = `<div class="prac-q-word">🎉 训练完成！</div>`;
+        document.getElementById('pracInteractArea').innerHTML = `<button class="btn btn-primary" style="width:100%; padding:15px;" onclick="forceQuitPractice()">返回学习</button>`;
+        return;
+    }
+
+pracCurrentWordObj = pracQueue[pracCurrentIndex];
+    // 修改进度条颜色和粗细
+    const progressEl = document.getElementById('pracProgress');
+    progressEl.innerText = `Word ${pracCurrentIndex + 1} of ${pracQueue.length}`;
+    progressEl.style.color = 'var(--text-dim)';
+    progressEl.style.fontWeight = '400';
+    progressEl.style.letterSpacing = '1px';
+
+    const qArea = document.getElementById('pracQuestionArea');
+    const iArea = document.getElementById('pracInteractArea'); // 💡 补上这一行！
+
+
+
+    // --- 1. 拼写挑战 ---
+    if (pracMode === 'spell') {
+        pracSpellFailCount = 0;
+
+        // 提取释义
+        let meaningText = '';
+        if (pracCurrentWordObj.meanings && pracCurrentWordObj.meanings.length) {
+            meaningText = pracCurrentWordObj.meanings.join('; ');
+        } else if (pracCurrentWordObj.apiMeanings && pracCurrentWordObj.apiMeanings.length) {
+            meaningText = pracCurrentWordObj.apiMeanings.join('; ');
+        } else {
+            meaningText = '听音拼写';
+        }
+        meaningText = meaningText.replace(/;/g, ' <span style="color:var(--border)">|</span> ');
+
+        // 提取音标
+        let phoneticText = pracCurrentWordObj.phonetic || '';
+
+        // 渲染上半部分：发音、释义、音标
+        qArea.innerHTML = `
+            <button class="speak-btn" style="margin: 0 auto 16px; width:48px; height:48px;" onclick="speak('${pracCurrentWordObj.word.replace(/'/g, "\\'")}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>
+            </button>
+            <div style="font-size: 18px; color: var(--text); font-weight: 500; line-height: 1.5; padding: 0 20px;">${meaningText}</div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text-dim); margin-top:8px;">${phoneticText}</div>
+            <div class="spell-hint-text" id="pracSpellHint"></div>
+        `;
+
+        // 渲染下半部分：输入框和快捷键提示
+        iArea.innerHTML = `
+            <input type="text" id="pracSpellInput" class="spell-input" autocomplete="off" spellcheck="false" placeholder="Type here...">
+            <div style="font-size: 12px; color: var(--text-dim); margin-top: 10px; text-align: center;">
+                按 <kbd>Enter</kbd> 提交 · 按 <kbd>Tab</kbd> 提示 · 按 <kbd>Esc</kbd> 看答案
+            </div>
+        `;
+
+        speak(pracCurrentWordObj.word);
+        const input = document.getElementById('pracSpellInput');
+        setTimeout(() => input.focus(), 100);
+
+        input.onkeydown = (e) => {
+            const targetWord = pracCurrentWordObj.word;
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                showPracSpellHint(targetWord);
+                pracSpellFailCount++;
+                return;
+            }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                speak(targetWord); // 💡 新增：按 Esc 看答案时，朗读目标单词
+                input.value = targetWord;
+                input.className = 'spell-input reveal';
+                input.disabled = true;
+                setTimeout(() => {
+                    input.disabled = false;
+                    pracCurrentIndex++;
+                    renderPracQuestion();
+                }, 1500);
+                return;
+            }
+            if (e.key === 'Enter') {
+                if (input.value.trim().toLowerCase() === targetWord.toLowerCase()) {
+                    input.className = 'spell-input success';
+                    setTimeout(() => { pracCurrentIndex++; renderPracQuestion(); }, 500);
+                } else {
+                    pracSpellFailCount++;
+                    input.className = 'spell-input error';
+                    if (pracSpellFailCount >= 2) showPracSpellHint(targetWord);
+                    setTimeout(() => { input.className = 'spell-input'; input.value = ''; }, 400);
+                }
+            }
+        };
+    }
+    // --- 2. 词义辨析 (4 选项) ---
+    else if (pracMode === 'choice') {
+        const isEngToZh = Math.random() > 0.5;
+        const correctStr = isEngToZh ? getCoreMeaning(pracCurrentWordObj) : pracCurrentWordObj.word;
+
+        // 💡 关键改动：传入 4，代表“1个正确 + 3个随机干扰”
+        const opts = generateDistractors(correctStr, 4, isEngToZh ? 'meaning' : 'english');
+
+        qArea.innerHTML = `<div class="${isEngToZh?'prac-q-word':'prac-q-mean'}">${isEngToZh?pracCurrentWordObj.word:getCoreMeaning(pracCurrentWordObj)}</div>`;
+        if(isEngToZh) speak(pracCurrentWordObj.word);
+
+iArea.innerHTML = `<div class="prac-options-grid">${opts.map(opt => `<button class="prac-opt-btn" onclick="checkChoiceAns(this, '${escapeHtml(opt)}', '${escapeHtml(correctStr)}', ${!isEngToZh})">${opt}</button>`).join('')}</div>`;
+    }
+    // --- 3. 听音辨意 (4 选项句子) ---
+    else if (pracMode === 'listen') {
+        qArea.innerHTML = `<div style="color:var(--text-dim); font-size:12px;">⏳ 正在调取原声例句...</div>`;
+        let sentenceEn = "", sentenceZh = "";
+        try {
+            const data = await getGoogleRawData(pracCurrentWordObj.word);
+            if (data.examples && data.examples.length > 0) {
+                sentenceEn = data.examples[0].en;
+                sentenceZh = data.examples[0].zh.replace(/[（）()]/g, '').trim();
+            } else throw new Error();
+        } catch (e) {
+            sentenceEn = `Please focus on the word: ${pracCurrentWordObj.word}.`;
+            sentenceZh = `请记住这个词的意思：${getCoreMeaning(pracCurrentWordObj)}`;
+        }
+
+        // 💡 关键改动：传入 4，从 100 条干扰库中随机挑 3 条
+        const opts = generateDistractors(sentenceZh, 4, 'sentence');
+
+        qArea.innerHTML = `
+            <button class="prac-audio-pulse" onclick="playAudioOnce('${escapeHtml(sentenceEn)}', document.getElementById('voiceSelect').value, document.getElementById('speedSelect').value)">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>
+            </button>`;
+
+        iArea.innerHTML = `<div class="prac-options-grid sentence-mode">${opts.map(opt => `<button class="prac-opt-btn" style="text-align:left; padding:12px 18px;" onclick="checkChoiceAns(this, '${escapeHtml(opt)}', '${escapeHtml(sentenceZh)}')">${opt}</button>`).join('')}</div>`;
+        playAudioOnce(sentenceEn, document.getElementById('voiceSelect').value, document.getElementById('speedSelect').value);
+    }
+}
+
+function escapeHtml(unsafe) { return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+
+function checkChoiceAns(btnEl, userAns, correctAns, isSelectEnglish = false) {
+    const allBtns = document.querySelectorAll('.prac-opt-btn');
+    allBtns.forEach(b => b.disabled = true);
+
+    // 💡 修改这里：只要是在中译英模式，无论点哪个，强制朗读【正确的答案】
+    if (isSelectEnglish) {
+        speak(correctAns);
+    }
+
+    if (userAns === correctAns) {
+        btnEl.classList.add('correct');
+        setTimeout(() => { pracCurrentIndex++; renderPracQuestion(); }, 600);
+    } else {
+        btnEl.classList.add('wrong');
+        allBtns.forEach(b => { if (b.innerText.trim() === correctAns) b.classList.add('correct'); });
+        setTimeout(() => { pracCurrentIndex++; renderPracQuestion(); }, 1800);
+    }
+}
+
+// 💡 页面加载完成后，检查是否有“跨页面”传递过来的 Toast 消息
+  window.addEventListener('load', () => {
+    const pendingMsg = sessionStorage.getItem('vocab_pending_toast');
+    if (pendingMsg) {
+      // 稍微延迟一下弹出，视觉效果更好
+      setTimeout(() => {
+        showDictToast(pendingMsg, "success");
+        // 记得用完就扔掉，否则每次刷新都会弹
+        sessionStorage.removeItem('vocab_pending_toast');
+      }, 300);
+    }
+  });
+
+  loadState();
+</script>
+<div class="modal-overlay" id="confirmModalOverlay" style="z-index: 9999; display: none; align-items: center; justify-content: center; position: fixed; inset: 0; background: var(--modal-bg);">
+  <div class="modal" style="max-width: 360px; transform: scale(0.9); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+    <div class="modal-body" style="padding: 30px; text-align: center;">
+      <div id="confirmIcon" style="font-size: 44px; margin-bottom: 15px;">⚠️</div>
+      <p id="confirmMessage" style="font-size: 15px; line-height: 1.6; margin-bottom: 24px; color: var(--text); font-weight: 500;"></p>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn" style="flex: 1; justify-content: center; padding: 12px; font-size: 14px;" onclick="handleConfirmChoice(false)">取消</button>
+        <button class="btn btn-primary" id="confirmSubmitBtn" style="flex: 1; justify-content: center; padding: 12px; font-size: 14px;" onclick="handleConfirmChoice(true)">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
